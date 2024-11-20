@@ -26,7 +26,7 @@ public class MainActivity extends AppCompatActivity {
             return insets;
         });
         View rootView = findViewById(android.R.id.content);
-        final View viewToHide = findViewById(R.id.chess_icon);
+        final View viewToHide = findViewById(R.id.profile_pic);
 
         rootView.getViewTreeObserver().addOnGlobalLayoutListener(() -> {
             Rect r = new Rect();

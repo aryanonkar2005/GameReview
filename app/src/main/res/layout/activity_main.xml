@@ -3,9 +3,9 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
-    android:fitsSystemWindows="true"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
     tools:context=".MainActivity">
 
     <com.google.android.material.appbar.MaterialToolbar
@@ -17,63 +17,62 @@
         app:title="Free Game Review"
         app:titleCentered="true" />
 
-        <LinearLayout
+    <LinearLayout
+        android:id="@+id/profile_pic"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toTopOf="@id/urlInpParentContainer"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/toolbar">
+
+        <com.google.android.material.imageview.ShapeableImageView
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:src="@drawable/aryan"
+            app:shapeAppearanceOverlay="@style/RoundedImageView" />
+
+        <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:gravity="center"
-            app:layout_constraintBottom_toTopOf="@id/urlInpParentContainer"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/toolbar">
+            android:layout_marginTop="16dp"
+            android:text="App built by Aryan Onkar"
+            android:textAppearance="@style/TextAppearance.Material3.TitleSmall" />
 
-            <com.google.android.material.imageview.ShapeableImageView
-                android:id="@+id/chess_icon"
-                android:layout_width="64dp"
-                android:layout_height="64dp"
-                android:src="@drawable/aryan"
-                app:shapeAppearanceOverlay="@style/RoundedImageView" />
+    </LinearLayout>
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:text="App built by Aryan Onkar"
-                android:textAppearance="@style/TextAppearance.Material3.TitleSmall"/>
+    <LinearLayout
+        android:id="@+id/urlInpParentContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="32dp"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
 
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/urlInpParentContainer"
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/urlInpLayout"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox.Dense"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:layout_marginHorizontal="32dp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
-            <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/urlInpLayout"
-                style="@style/Widget.Material3.TextInputLayout.OutlinedBox.Dense"
+            android:hint="Enter Game URL"
+            android:minHeight="56dp">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/urlInp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Enter Game URL"
-                android:minHeight="56dp">
+                android:lines="4"
+                android:minHeight="56dp" />
+        </com.google.android.material.textfield.TextInputLayout>
 
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/urlInp"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:lines="4"
-                    android:minHeight="56dp" />
-            </com.google.android.material.textfield.TextInputLayout>
-
-            <com.google.android.material.button.MaterialButton
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:text="Game Review" />
-        </LinearLayout>
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
+        <com.google.android.material.button.MaterialButton
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Game Review" />
+    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
