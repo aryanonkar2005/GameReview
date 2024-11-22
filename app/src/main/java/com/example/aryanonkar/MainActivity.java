@@ -105,7 +105,8 @@ public class MainActivity extends AppCompatActivity {
             }
 
             ((TextInputLayout) findViewById(R.id.urlInpLayout)).setError(null);
-            findViewById(R.id.urlInpCont).setEnabled(false);
+            findViewById(R.id.urlInp).setEnabled(false);
+            findViewById(R.id.reviewBtn).setEnabled(false);
             hideKeyboard();
             findViewById(R.id.spinnerCont).setVisibility(View.VISIBLE);
             findViewById(R.id.dpCont).setVisibility(View.GONE);
@@ -128,7 +129,8 @@ public class MainActivity extends AppCompatActivity {
                     // Handle failure
                     Log.e("API Failure", "Request failed: " + e.getMessage());
                     runOnUiThread(() -> {
-                        findViewById(R.id.urlInpCont).setEnabled(true);
+                        findViewById(R.id.urlInp).setEnabled(true);
+                        findViewById(R.id.reviewBtn).setEnabled(true);
                         findViewById(R.id.spinnerCont).setVisibility(View.GONE);
                         ((ImageView)findViewById(R.id.statusIcon)).setImageResource(R.drawable.error_icon);
                         ((TextView)findViewById(R.id.statusTxt)).setText("Failed to send your request");
@@ -145,7 +147,8 @@ public class MainActivity extends AppCompatActivity {
 
                         // If you need to update the UI, do it on the main thread
                         runOnUiThread(() -> {
-                            findViewById(R.id.urlInpCont).setEnabled(true);
+                            findViewById(R.id.urlInp).setEnabled(true);
+                            findViewById(R.id.reviewBtn).setEnabled(true);
                             ((TextInputEditText) findViewById(R.id.urlInp)).setText("");
                             findViewById(R.id.spinnerCont).setVisibility(View.GONE);
                             ((ImageView)findViewById(R.id.statusIcon)).setImageResource(R.drawable.check_circle_icon);
@@ -156,7 +159,8 @@ public class MainActivity extends AppCompatActivity {
                         // Handle error
                         Log.e("API Error", "Response Code: " + response.code());
                         runOnUiThread(() -> {
-                            findViewById(R.id.urlInpCont).setEnabled(true);
+                            findViewById(R.id.urlInp).setEnabled(true);
+                            findViewById(R.id.reviewBtn).setEnabled(true);
                             findViewById(R.id.spinnerCont).setVisibility(View.GONE);
                             ((ImageView)findViewById(R.id.statusIcon)).setImageResource(R.drawable.error_icon);
                             ((TextView)findViewById(R.id.statusTxt)).setText("Server Error");
