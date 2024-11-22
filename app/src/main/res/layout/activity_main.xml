@@ -13,62 +13,117 @@
         android:layout_height="wrap_content"
         app:layout_constraintTop_toTopOf="parent"
         app:menu="@menu/toolbar_menu"
-        app:title="Free Game Review"
+        app:title="Chess Game Review"
         app:titleCentered="true" />
 
     <LinearLayout
-        android:id="@+id/profile_pic"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:id="@+id/dpGrandparent"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:gravity="center"
-        android:orientation="vertical"
-        app:layout_constraintBottom_toTopOf="@id/urlInpParentContainer"
+        app:layout_constraintBottom_toTopOf="@id/urlInpCont"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toBottomOf="@id/toolbar">
-
-        <com.google.android.material.imageview.ShapeableImageView
-            android:layout_width="64dp"
-            android:layout_height="64dp"
-            android:src="@drawable/aryan"
-            app:shapeAppearanceOverlay="@style/RoundedImageView" />
-
-        <TextView
+        <LinearLayout
+            android:id="@+id/dpCont"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="App built by Aryan Onkar"
-            android:textAppearance="@style/TextAppearance.Material3.TitleSmall" />
+            android:gravity="center"
+            android:orientation="vertical">
 
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/dp"
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:src="@drawable/aryan"
+                app:shapeAppearanceOverlay="@style/RoundedImageView" />
+
+            <TextView
+                android:id="@+id/dpTxt"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="App built by Aryan Onkar"
+                android:textAppearance="@style/TextAppearance.Material3.TitleSmall" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/spinnerCont"
+            android:visibility="gone"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <com.google.android.material.progressindicator.CircularProgressIndicator
+                android:id="@+id/spinner"
+                android:indeterminate="true"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+            <TextView
+                android:id="@+id/spinnerTxt"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="Reveiwing"
+                android:textAppearance="@style/TextAppearance.Material3.TitleSmall" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/statusCont"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:visibility="gone"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+            <ImageView
+                android:id="@+id/statusIcon"
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:src="@drawable/check_circle_icon"/>
+            <TextView
+                android:id="@+id/statusTxt"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:textAlignment="center"
+                android:text="Game Reviewed\nSuccessfully"
+                android:textAppearance="@style/TextAppearance.Material3.TitleSmall" />
+        </LinearLayout>
     </LinearLayout>
 
     <LinearLayout
-        android:id="@+id/urlInpParentContainer"
+        android:id="@+id/urlInpCont"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="32dp"
-        android:orientation="vertical"
         android:fitsSystemWindows="true"
+        android:orientation="vertical"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toBottomOf="@id/toolbar">
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/urlInpLayout"
-            style="@style/Widget.Material3.TextInputLayout.OutlinedBox.Dense"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Enter Game URL"
-            android:minHeight="56dp">
+            android:hint="Enter Game URL">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/urlInp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:lines="4"
-                android:minHeight="56dp" />
+                android:maxLines="4"
+                android:minLines="1" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.button.MaterialButton
+            android:id="@+id/reviewBtn"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
