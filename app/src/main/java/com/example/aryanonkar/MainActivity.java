@@ -126,7 +126,7 @@ public class MainActivity extends AppCompatActivity {
                         if(!clipText.isEmpty()) {
                             ((TextInputEditText) findViewById(R.id.urlInp)).setText(clipText);
                             ((TextInputEditText) findViewById(R.id.urlInp)).setSelection(clipText.length());
-                            Toast.makeText(this, "Pasted from clipboard", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(this, "Pasted last copied text from clipboard", Toast.LENGTH_LONG).show();
                         }
                     }
                 }
