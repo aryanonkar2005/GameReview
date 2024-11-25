@@ -1,6 +1,7 @@
 package com.example.aryanonkar;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.graphics.Rect;
 import android.os.Bundle;
 import android.os.Handler;
@@ -57,35 +58,26 @@ public class MainActivity extends AppCompatActivity {
             return insets;
         });
 
-        new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                View rootView = findViewById(android.R.id.content);
-                final View viewToHide = findViewById(R.id.dpGrandparent);
+        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+            View rootView = findViewById(android.R.id.content);
+            final View viewToHide = findViewById(R.id.chessIconGrandparent);
 
-                rootView.getViewTreeObserver().addOnGlobalLayoutListener(() -> {
-                    Rect r = new Rect();
-                    rootView.getWindowVisibleDisplayFrame(r);
-                    int screenHeight = rootView.getRootView().getHeight();
-                    int keypadHeight = screenHeight - r.bottom;
+            rootView.getViewTreeObserver().addOnGlobalLayoutListener(() -> {
+                Rect r = new Rect();
+                rootView.getWindowVisibleDisplayFrame(r);
+                int screenHeight = rootView.getRootView().getHeight();
+                int keypadHeight = screenHeight - r.bottom;
 
-                    if (keypadHeight > screenHeight * 0.15) {
-                        // Keyboard is open
-                        viewToHide.setVisibility(View.GONE);
-                    } else {
-                        // Keyboard is closed
-                        viewToHide.setVisibility(View.VISIBLE);
-                    }
-                });
+                if (keypadHeight > screenHeight * 0.15) {
+                    // Keyboard is open
+                    viewToHide.setVisibility(View.GONE);
+                } else {
+                    // Keyboard is closed
+                    viewToHide.setVisibility(View.VISIBLE);
+                }
+            });
 
-            }
         }, 500);
-
-        findViewById(R.id.dpCont).setOnClickListener((e) -> {
-            if (((TextView) findViewById(R.id.dpTxt)).getText() == "App built by Aryan Onkar")
-                ((TextView) findViewById(R.id.dpTxt)).setText("Aryan Onkar");
-            else ((TextView) findViewById(R.id.dpTxt)).setText("App built by Aryan Onkar");
-        });
 
         findViewById(R.id.reviewBtn).setOnClickListener((event) -> {
             if (((TextInputEditText) findViewById(R.id.urlInp)).getText().toString().isBlank()) {
@@ -105,11 +97,12 @@ public class MainActivity extends AppCompatActivity {
             }
 
             ((TextInputLayout) findViewById(R.id.urlInpLayout)).setError(null);
+            ((TextInputLayout) findViewById(R.id.urlInpLayout)).setErrorEnabled(false);
             findViewById(R.id.urlInp).setEnabled(false);
             findViewById(R.id.reviewBtn).setEnabled(false);
             hideKeyboard();
             findViewById(R.id.spinnerCont).setVisibility(View.VISIBLE);
-            findViewById(R.id.dpCont).setVisibility(View.GONE);
+            findViewById(R.id.chessIconCont).setVisibility(View.GONE);
             findViewById(R.id.statusCont).setVisibility(View.GONE);
             OkHttpClient client = new OkHttpClient.Builder()
                     .connectTimeout(240, TimeUnit.SECONDS) // Connection timeout
@@ -133,6 +126,7 @@ public class MainActivity extends AppCompatActivity {
                         findViewById(R.id.reviewBtn).setEnabled(true);
                         findViewById(R.id.spinnerCont).setVisibility(View.GONE);
                         ((ImageView)findViewById(R.id.statusIcon)).setImageResource(R.drawable.error_icon);
+                        ((TextView)findViewById(R.id.statusTxt)).setTextColor(getColor(R.color.errorRed));
                         ((TextView)findViewById(R.id.statusTxt)).setText("Failed to send your request");
                         findViewById(R.id.statusCont).setVisibility(View.VISIBLE);
                     });
@@ -152,6 +146,7 @@ public class MainActivity extends AppCompatActivity {
                             ((TextInputEditText) findViewById(R.id.urlInp)).setText("");
                             findViewById(R.id.spinnerCont).setVisibility(View.GONE);
                             ((ImageView)findViewById(R.id.statusIcon)).setImageResource(R.drawable.check_circle_icon);
+                            ((TextView)findViewById(R.id.statusTxt)).setTextColor(getColor(R.color.successGreen));
                             ((TextView)findViewById(R.id.statusTxt)).setText("Game reviewed\nsuccessfully");
                             findViewById(R.id.statusCont).setVisibility(View.VISIBLE);
                         });
@@ -163,6 +158,7 @@ public class MainActivity extends AppCompatActivity {
                             findViewById(R.id.reviewBtn).setEnabled(true);
                             findViewById(R.id.spinnerCont).setVisibility(View.GONE);
                             ((ImageView)findViewById(R.id.statusIcon)).setImageResource(R.drawable.error_icon);
+                            ((TextView)findViewById(R.id.statusTxt)).setTextColor(getColor(R.color.errorRed));
                             ((TextView)findViewById(R.id.statusTxt)).setText("Server Error");
                             findViewById(R.id.statusCont).setVisibility(View.VISIBLE);
                         });

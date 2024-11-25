@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="dpBg">@color/material_dynamic_neutral10</color>
+    <color name="successGreen">#81C784</color>
+    <color name="errorRed">#F2B8B5</color>
+    <color name="blackWhite">@color/white</color>
 </resources>

@@ -13,13 +13,13 @@
         android:layout_height="wrap_content"
         app:layout_constraintTop_toTopOf="parent"
         app:menu="@menu/toolbar_menu"
-        app:title="Chess Game Review"
+        app:title="Chess Game Reviewer"
         app:titleCentered="true" />
 
     <LinearLayout
         android:orientation="vertical"
         android:gravity="center"
-        android:id="@+id/dpGrandparent"
+        android:id="@+id/chessIconGrandparent"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:layout_constraintBottom_toTopOf="@id/urlInpCont"
@@ -27,28 +27,18 @@
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toBottomOf="@id/toolbar">
         <LinearLayout
-            android:id="@+id/dpCont"
+            android:id="@+id/chessIconCont"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:gravity="center"
             android:orientation="vertical">
 
             <com.google.android.material.imageview.ShapeableImageView
-                android:id="@+id/dp"
+                android:id="@+id/chess_icon"
                 android:layout_width="64dp"
                 android:layout_height="64dp"
-                android:background="@color/dpBg"
-                android:src="@drawable/aryan"
+                android:src="@drawable/chess_icon_thin"
                 app:shapeAppearanceOverlay="@style/RoundedImageView" />
-
-            <TextView
-                android:id="@+id/dpTxt"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:text="App built by Aryan Onkar"
-                android:textAppearance="@style/TextAppearance.Material3.TitleSmall" />
-
         </LinearLayout>
 
         <LinearLayout
@@ -128,7 +118,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:text="Game Review" />
+            android:text="Review this game" />
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
