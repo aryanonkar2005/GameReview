@@ -102,7 +102,7 @@
             style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Enter Game URL">
+            android:hint="Enter game URL">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/urlInp"
@@ -122,7 +122,7 @@
                 android:layout_weight="1"
                 android:layout_marginRight="4dp"
                 style="@style/Widget.Material3.Button.OutlinedButton"
-                android:text="Paste URL" />
+                android:text="Paste" />
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/reviewBtn"
                 android:layout_width="0dp"
