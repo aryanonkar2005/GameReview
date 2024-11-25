@@ -1,18 +1,15 @@
 package com.example.aryanonkar;
 
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Context;
-import android.graphics.Color;
 import android.graphics.Rect;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -23,8 +20,6 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
-import com.google.android.material.button.MaterialButton;
-import com.google.android.material.snackbar.BaseTransientBottomBar;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
@@ -78,8 +73,25 @@ public class MainActivity extends AppCompatActivity {
                     viewToHide.setVisibility(View.VISIBLE);
                 }
             });
+            ClipboardManager clipboardManager = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
 
-        }, 500);
+            if (clipboardManager.hasPrimaryClip() && clipboardManager.getPrimaryClipDescription().hasMimeType("text/plain")) {
+                ClipData clipData = clipboardManager.getPrimaryClip();
+                if (clipData != null && clipData.getItemCount() > 0) {
+                    CharSequence clipboardText = clipData.getItemAt(0).getText();
+                    if (clipboardText != null) {
+                        Pattern pattern = Pattern.compile("https://www.chess.com/([a-zA-Z0-9\\-]+)/game/([a-zA-Z0-9\\-]+)");
+                        Matcher matcher = pattern.matcher(clipboardText);
+                        String game_url = null;
+                        while (matcher.find()) game_url = matcher.group();
+                        if (game_url != null) {
+                            ((TextInputEditText) findViewById(R.id.urlInp)).setText(clipboardText);
+                            Toast.makeText(this, "Game URL pasted from clipboard", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                }
+            }
+        }, 1);
 
         findViewById(R.id.reviewBtn).setOnClickListener((event) -> {
             if (((TextInputEditText) findViewById(R.id.urlInp)).getText().toString().isBlank()) {
