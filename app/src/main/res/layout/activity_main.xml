@@ -111,13 +111,27 @@
                 android:maxLines="4"
                 android:minLines="1" />
         </com.google.android.material.textfield.TextInputLayout>
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/reviewBtn"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="Review this game" />
+            android:layout_marginTop="16dp">
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/pasteBtn"
+                android:layout_height="wrap_content"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_marginRight="4dp"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:text="Paste URL" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/reviewBtn"
+                android:layout_width="0dp"
+                android:layout_marginLeft="4dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                style="@style/Widget.Material3.Button"
+                android:text="Review game" />
+        </LinearLayout>
     </LinearLayout>
     <TextView
         android:layout_width="wrap_content"
@@ -125,6 +139,7 @@
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_marginBottom="4dp"
         android:textColor="@color/material_on_background_emphasis_medium"
         android:text="An app by Aryan Onkar"
         android:textAppearance="@style/ShapeAppearance.Material3.Corner.Small" />

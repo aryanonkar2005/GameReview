@@ -39,6 +39,28 @@ import java.util.regex.Pattern;
 
 public class MainActivity extends AppCompatActivity {
 
+    ClipboardManager clipboardManager = null;
+
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        try {
+            updatePasteBtn();
+        }catch (Exception ignored){}
+    }
+
+    public void updatePasteBtn(){
+        if (clipboardManager.hasPrimaryClip() && clipboardManager.getPrimaryClipDescription().hasMimeType("text/plain")) {
+            ClipData clipData = clipboardManager.getPrimaryClip();
+            if (clipData != null && clipData.getItemCount() > 0) {
+                String clipboardText = clipData.getItemAt(0).getText().toString().trim();
+                if (!clipboardText.isEmpty())
+                    findViewById(R.id.pasteBtn).setEnabled(true);
+                else findViewById(R.id.pasteBtn).setEnabled(false);
+            }else findViewById(R.id.pasteBtn).setEnabled(false);
+        }else findViewById(R.id.pasteBtn).setEnabled(false);
+    }
+
     public void hideKeyboard() {
         InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
         imm.hideSoftInputFromWindow(findViewById(android.R.id.content).getWindowToken(), 0);
@@ -73,17 +95,17 @@ public class MainActivity extends AppCompatActivity {
                     viewToHide.setVisibility(View.VISIBLE);
                 }
             });
-            ClipboardManager clipboardManager = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+            clipboardManager = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
 
             if (clipboardManager.hasPrimaryClip() && clipboardManager.getPrimaryClipDescription().hasMimeType("text/plain")) {
                 ClipData clipData = clipboardManager.getPrimaryClip();
                 if (clipData != null && clipData.getItemCount() > 0) {
-                    CharSequence clipboardText = clipData.getItemAt(0).getText();
-                    if (clipboardText != null) {
+                    String clipboardText = clipData.getItemAt(0).getText().toString().trim();
+                    if (!clipboardText.isEmpty()) {
                         Pattern pattern = Pattern.compile("https://www.chess.com/([a-zA-Z0-9\\-]+)/game/([a-zA-Z0-9\\-]+)");
                         Matcher matcher = pattern.matcher(clipboardText);
                         String game_url = null;
-                        while (matcher.find()) game_url = matcher.group();
+                        if(matcher.find()) game_url = matcher.group();
                         if (game_url != null) {
                             ((TextInputEditText) findViewById(R.id.urlInp)).setText(clipboardText);
                             Toast.makeText(this, "Game URL pasted from clipboard", Toast.LENGTH_SHORT).show();
@@ -91,6 +113,23 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
             }
+
+            updatePasteBtn();
+            ClipboardManager.OnPrimaryClipChangedListener clipboardListener = this::updatePasteBtn;
+            clipboardManager.addPrimaryClipChangedListener(clipboardListener);
+
+            findViewById(R.id.pasteBtn).setOnClickListener((e)->{
+                if (clipboardManager.hasPrimaryClip() && clipboardManager.getPrimaryClipDescription().hasMimeType("text/plain")) {
+                    ClipData clipData = clipboardManager.getPrimaryClip();
+                    if (clipData != null && clipData.getItemCount() > 0) {
+                        String clipText = clipData.getItemAt(0).getText().toString().trim();
+                        if(!clipText.isEmpty()) {
+                            ((TextInputEditText) findViewById(R.id.urlInp)).setText(clipText);
+                            ((TextInputEditText) findViewById(R.id.urlInp)).setSelection(clipText.length());
+                        }
+                    }
+                }
+            });
         }, 1);
 
         findViewById(R.id.reviewBtn).setOnClickListener((event) -> {
@@ -103,13 +142,13 @@ public class MainActivity extends AppCompatActivity {
             Pattern pattern = Pattern.compile("https://www.chess.com/([a-zA-Z0-9\\-]+)/game/([a-zA-Z0-9\\-]+)");
             Matcher matcher = pattern.matcher(raw_url_inp);
             String game_url = null;
-            while (matcher.find()) game_url = matcher.group();
+            if (matcher.find()) game_url = matcher.group();
 
             if (game_url == null) {
-                if (!Pattern.matches("^(https?|ftp)://[^\\s/$.?#].\\S*$", raw_url_inp))
-                    ((TextInputLayout) findViewById(R.id.urlInpLayout)).setError("Invalid URL");
-                else
+                if (raw_url_inp.contains("http"))
                     Snackbar.make(this, findViewById(android.R.id.content), "This app can only review games played on chess.com", Snackbar.LENGTH_LONG).show();
+                else
+                    ((TextInputLayout) findViewById(R.id.urlInpLayout)).setError("Invalid URL");
                 return;
             }
 
@@ -117,6 +156,7 @@ public class MainActivity extends AppCompatActivity {
             ((TextInputLayout) findViewById(R.id.urlInpLayout)).setErrorEnabled(false);
             findViewById(R.id.urlInp).setEnabled(false);
             findViewById(R.id.reviewBtn).setEnabled(false);
+            findViewById(R.id.pasteBtn).setEnabled(false);
             hideKeyboard();
             findViewById(R.id.spinnerCont).setVisibility(View.VISIBLE);
             findViewById(R.id.chessIconCont).setVisibility(View.GONE);
@@ -141,6 +181,7 @@ public class MainActivity extends AppCompatActivity {
                     runOnUiThread(() -> {
                         findViewById(R.id.urlInp).setEnabled(true);
                         findViewById(R.id.reviewBtn).setEnabled(true);
+                        findViewById(R.id.pasteBtn).setEnabled(true);
                         findViewById(R.id.spinnerCont).setVisibility(View.GONE);
                         ((ImageView) findViewById(R.id.statusIcon)).setImageResource(R.drawable.error_icon);
                         ((TextView) findViewById(R.id.statusTxt)).setTextColor(getColor(R.color.errorRed));
@@ -160,6 +201,7 @@ public class MainActivity extends AppCompatActivity {
                         runOnUiThread(() -> {
                             findViewById(R.id.urlInp).setEnabled(true);
                             findViewById(R.id.reviewBtn).setEnabled(true);
+                            findViewById(R.id.pasteBtn).setEnabled(true);
                             ((TextInputEditText) findViewById(R.id.urlInp)).setText("");
                             findViewById(R.id.spinnerCont).setVisibility(View.GONE);
                             ((ImageView) findViewById(R.id.statusIcon)).setImageResource(R.drawable.check_circle_icon);
@@ -173,6 +215,7 @@ public class MainActivity extends AppCompatActivity {
                         runOnUiThread(() -> {
                             findViewById(R.id.urlInp).setEnabled(true);
                             findViewById(R.id.reviewBtn).setEnabled(true);
+                            findViewById(R.id.pasteBtn).setEnabled(true);
                             findViewById(R.id.spinnerCont).setVisibility(View.GONE);
                             ((ImageView) findViewById(R.id.statusIcon)).setImageResource(R.drawable.error_icon);
                             ((TextView) findViewById(R.id.statusTxt)).setTextColor(getColor(R.color.errorRed));
