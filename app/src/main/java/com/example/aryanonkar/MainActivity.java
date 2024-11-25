@@ -24,6 +24,8 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.snackbar.BaseTransientBottomBar;
+import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 
@@ -92,7 +94,10 @@ public class MainActivity extends AppCompatActivity {
             while (matcher.find()) game_url = matcher.group();
 
             if (game_url == null) {
-                ((TextInputLayout) findViewById(R.id.urlInpLayout)).setError("Invalid URL");
+                if (!Pattern.matches("^(https?|ftp)://[^\\s/$.?#].\\S*$", raw_url_inp))
+                    ((TextInputLayout) findViewById(R.id.urlInpLayout)).setError("Invalid URL");
+                else
+                    Snackbar.make(this, findViewById(android.R.id.content), "This app can only review games played on chess.com", Snackbar.LENGTH_LONG).show();
                 return;
             }
 
@@ -125,9 +130,9 @@ public class MainActivity extends AppCompatActivity {
                         findViewById(R.id.urlInp).setEnabled(true);
                         findViewById(R.id.reviewBtn).setEnabled(true);
                         findViewById(R.id.spinnerCont).setVisibility(View.GONE);
-                        ((ImageView)findViewById(R.id.statusIcon)).setImageResource(R.drawable.error_icon);
-                        ((TextView)findViewById(R.id.statusTxt)).setTextColor(getColor(R.color.errorRed));
-                        ((TextView)findViewById(R.id.statusTxt)).setText("Failed to send your request");
+                        ((ImageView) findViewById(R.id.statusIcon)).setImageResource(R.drawable.error_icon);
+                        ((TextView) findViewById(R.id.statusTxt)).setTextColor(getColor(R.color.errorRed));
+                        ((TextView) findViewById(R.id.statusTxt)).setText("Failed to send your request");
                         findViewById(R.id.statusCont).setVisibility(View.VISIBLE);
                     });
                 }
@@ -145,9 +150,9 @@ public class MainActivity extends AppCompatActivity {
                             findViewById(R.id.reviewBtn).setEnabled(true);
                             ((TextInputEditText) findViewById(R.id.urlInp)).setText("");
                             findViewById(R.id.spinnerCont).setVisibility(View.GONE);
-                            ((ImageView)findViewById(R.id.statusIcon)).setImageResource(R.drawable.check_circle_icon);
-                            ((TextView)findViewById(R.id.statusTxt)).setTextColor(getColor(R.color.successGreen));
-                            ((TextView)findViewById(R.id.statusTxt)).setText("Game reviewed\nsuccessfully");
+                            ((ImageView) findViewById(R.id.statusIcon)).setImageResource(R.drawable.check_circle_icon);
+                            ((TextView) findViewById(R.id.statusTxt)).setTextColor(getColor(R.color.successGreen));
+                            ((TextView) findViewById(R.id.statusTxt)).setText("Game reviewed\nsuccessfully");
                             findViewById(R.id.statusCont).setVisibility(View.VISIBLE);
                         });
                     } else {
@@ -157,9 +162,9 @@ public class MainActivity extends AppCompatActivity {
                             findViewById(R.id.urlInp).setEnabled(true);
                             findViewById(R.id.reviewBtn).setEnabled(true);
                             findViewById(R.id.spinnerCont).setVisibility(View.GONE);
-                            ((ImageView)findViewById(R.id.statusIcon)).setImageResource(R.drawable.error_icon);
-                            ((TextView)findViewById(R.id.statusTxt)).setTextColor(getColor(R.color.errorRed));
-                            ((TextView)findViewById(R.id.statusTxt)).setText("Server Error");
+                            ((ImageView) findViewById(R.id.statusIcon)).setImageResource(R.drawable.error_icon);
+                            ((TextView) findViewById(R.id.statusTxt)).setTextColor(getColor(R.color.errorRed));
+                            ((TextView) findViewById(R.id.statusTxt)).setText("Server Error");
                             findViewById(R.id.statusCont).setVisibility(View.VISIBLE);
                         });
                     }
