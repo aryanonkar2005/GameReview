@@ -108,7 +108,7 @@ public class MainActivity extends AppCompatActivity {
                         if(matcher.find()) game_url = matcher.group();
                         if (game_url != null) {
                             ((TextInputEditText) findViewById(R.id.urlInp)).setText(clipboardText);
-                            Toast.makeText(this, "Game URL pasted from clipboard", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(this, "Last copied text pasted from clipboard", Toast.LENGTH_SHORT).show();
                         }
                     }
                 }
