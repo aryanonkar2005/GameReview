@@ -120,4 +120,14 @@
             android:layout_marginTop="16dp"
             android:text="Review this game" />
     </LinearLayout>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:textColor="@color/material_on_background_emphasis_medium"
+        android:text="An app by Aryan Onkar"
+        android:textAppearance="@style/ShapeAppearance.Material3.Corner.Small" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>
