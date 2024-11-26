@@ -6,7 +6,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Rect;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -91,7 +90,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void openHelpPage(MenuItem menuItem) {
-
+        startActivity(new Intent(this, HelpActivity.class));
     }
 
     public static boolean isGestureNavEnabled(Context context) {
@@ -117,8 +116,10 @@ public class MainActivity extends AppCompatActivity {
 
         SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);
 
-        if(pref.getString("theme","system").equalsIgnoreCase("light")) AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
-        else if(pref.getString("theme","system").toString().equalsIgnoreCase("dark")) AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+        if (pref.getString("theme", "system").equalsIgnoreCase("light"))
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+        else if (pref.getString("theme", "system").toString().equalsIgnoreCase("dark"))
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
         else AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
 
         if (isGestureNavEnabled(this)) {
