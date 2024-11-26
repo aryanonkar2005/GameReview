@@ -9,7 +9,6 @@ import android.os.Handler;
 import android.os.Looper;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.ImageView;
@@ -22,6 +21,7 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
@@ -42,6 +42,7 @@ import java.util.regex.Pattern;
 public class MainActivity extends AppCompatActivity {
 
     ClipboardManager clipboardManager = null;
+    String responseData = "No response";
 
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {
@@ -160,6 +161,15 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        findViewById(R.id.statusCont).setOnLongClickListener((e)->{
+            new MaterialAlertDialogBuilder(this)
+                    .setTitle("Developer Logs")
+                    .setMessage(responseData)
+                    .setPositiveButton("OK", (dialog, which) -> dialog.dismiss())
+                    .show();
+            return false;
+        });
+
         findViewById(R.id.reviewBtn).setOnClickListener((event) -> {
             if (((TextInputEditText) findViewById(R.id.urlInp)).getText().toString().isBlank()) {
                 ((TextInputLayout) findViewById(R.id.urlInpLayout)).setError("This field is required");
@@ -194,18 +204,15 @@ public class MainActivity extends AppCompatActivity {
                     .readTimeout(240, TimeUnit.SECONDS)    // Read timeout
                     .writeTimeout(240, TimeUnit.SECONDS).build();
 
-            // Build the request
             Request request = new Request.Builder()
                     .url("https://chess-review-api.onrender.com/game-review/?game-url=" + game_url)
                     .post(RequestBody.create("", null))
                     .build();
 
-            // Make the API call asynchronously
             client.newCall(request).enqueue(new Callback() {
                 @Override
                 public void onFailure(Call call, IOException e) {
-                    // Handle failure
-                    Log.e("API Failure", "Request failed: " + e.getMessage());
+                    responseData = e.getMessage();
                     runOnUiThread(() -> {
                         findViewById(R.id.urlInp).setEnabled(true);
                         findViewById(R.id.reviewBtn).setEnabled(true);
@@ -220,12 +227,8 @@ public class MainActivity extends AppCompatActivity {
 
                 @Override
                 public void onResponse(Call call, Response response) throws IOException {
+                    if(response.body()!=null) responseData = response.body().string();
                     if (response.isSuccessful() && response.body() != null) {
-                        // Handle success
-                        String responseData = response.body().string();
-                        Log.d("API Response", "Response Data: " + responseData);
-
-                        // If you need to update the UI, do it on the main thread
                         runOnUiThread(() -> {
                             findViewById(R.id.urlInp).setEnabled(true);
                             findViewById(R.id.reviewBtn).setEnabled(true);
@@ -238,8 +241,6 @@ public class MainActivity extends AppCompatActivity {
                             findViewById(R.id.statusCont).setVisibility(View.VISIBLE);
                         });
                     } else {
-                        // Handle error
-                        Log.e("API Error", "Response Code: " + response.code());
                         runOnUiThread(() -> {
                             findViewById(R.id.urlInp).setEnabled(true);
                             findViewById(R.id.reviewBtn).setEnabled(true);
