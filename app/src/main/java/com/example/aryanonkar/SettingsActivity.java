@@ -54,9 +54,9 @@ public class SettingsActivity extends AppCompatActivity {
             });
 
             findPreference("theme").setOnPreferenceChangeListener((preference, newValue) -> {
-                if (newValue.toString().equals("light"))
+                if (newValue.toString().equalsIgnoreCase("light"))
                     AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
-                else if (newValue.toString().equals("dark"))
+                else if (newValue.toString().equalsIgnoreCase("dark"))
                     AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
                 else
                     AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);

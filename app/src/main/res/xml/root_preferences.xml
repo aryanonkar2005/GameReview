@@ -12,6 +12,7 @@
             app:key="theme"
             app:iconSpaceReserved="false"
             app:title="Theme"
+            app:defaultValue="system"
             app:useSimpleSummaryProvider="true"
             app:entries="@array/theme_entries"
             app:entryValues="@array/theme_values" />
