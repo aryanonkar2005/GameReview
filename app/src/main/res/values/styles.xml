@@ -1,7 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <style name="RoundedImageView">
         <item name="cornerFamily">rounded</item>
         <item name="cornerSize">16dp</item>
+    </style>
+    <style name="Preference.SwitchPreferenceCompat" parent="@style/Widget.Material3.CompoundButton.MaterialSwitch"
+        tools:ignore="ResourceCycle">
+        <item name="widgetLayout">@layout/m3_switch</item>
     </style>
 </resources>

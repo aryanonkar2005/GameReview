@@ -3,12 +3,17 @@ package com.example.aryanonkar;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Rect;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.provider.Settings;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.ImageView;
@@ -17,9 +22,11 @@ import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.preference.PreferenceManager;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.snackbar.Snackbar;
@@ -79,6 +86,24 @@ public class MainActivity extends AppCompatActivity {
         imm.hideSoftInputFromWindow(findViewById(android.R.id.content).getWindowToken(), 0);
     }
 
+    public void openSettingsPage(MenuItem menuItem) {
+        startActivity(new Intent(this, SettingsActivity.class));
+    }
+
+    public void openHelpPage(MenuItem menuItem) {
+
+    }
+
+    public static boolean isGestureNavEnabled(Context context) {
+        try {
+            int mode = Settings.Secure.getInt(context.getContentResolver(), "navigation_mode");
+            return mode == 2;
+        } catch (Settings.SettingNotFoundException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -89,6 +114,18 @@ public class MainActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
+
+        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);
+
+        if(pref.getString("theme","system").equalsIgnoreCase("light")) AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+        else if(pref.getString("theme","system").toString().equalsIgnoreCase("dark")) AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+        else AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
+
+        if (isGestureNavEnabled(this)) {
+            findViewById(R.id.line).setVisibility(View.GONE);
+        } else {
+            findViewById(R.id.line).setVisibility(View.VISIBLE);
+        }
 
         new Handler(Looper.getMainLooper()).postDelayed(() -> {
             View rootView = findViewById(android.R.id.content);
@@ -109,28 +146,9 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
             clipboardManager = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
-
-            if (clipboardManager.hasPrimaryClip() && clipboardManager.getPrimaryClipDescription().hasMimeType("text/plain")) {
-                ClipData clipData = clipboardManager.getPrimaryClip();
-                if (clipData != null && clipData.getItemCount() > 0) {
-                    String clipboardText = clipData.getItemAt(0).getText().toString().trim();
-                    if (!clipboardText.isEmpty()) {
-                        Pattern pattern = Pattern.compile("https://www.chess.com/([a-zA-Z0-9\\-]+)/game/([a-zA-Z0-9\\-]+)");
-                        Matcher matcher = pattern.matcher(clipboardText);
-                        String game_url = null;
-                        if (matcher.find()) game_url = matcher.group();
-                        if (game_url != null) {
-                            ((TextInputEditText) findViewById(R.id.urlInp)).setText(clipboardText);
-                            Toast.makeText(this, "Game URL pasted from clipboard", Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                }
-            }
-
             updatePasteBtn();
             ClipboardManager.OnPrimaryClipChangedListener clipboardListener = this::updatePasteBtn;
             clipboardManager.addPrimaryClipChangedListener(clipboardListener);
-
             findViewById(R.id.pasteBtn).setOnClickListener((e) -> {
                 if (clipboardManager.hasPrimaryClip() && clipboardManager.getPrimaryClipDescription().hasMimeType("text/plain")) {
                     ClipData clipData = clipboardManager.getPrimaryClip();
@@ -144,6 +162,24 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
             });
+            if (pref.getBoolean("autopaste", false)) {
+                if (clipboardManager.hasPrimaryClip() && clipboardManager.getPrimaryClipDescription().hasMimeType("text/plain")) {
+                    ClipData clipData = clipboardManager.getPrimaryClip();
+                    if (clipData != null && clipData.getItemCount() > 0) {
+                        String clipboardText = clipData.getItemAt(0).getText().toString().trim();
+                        if (!clipboardText.isEmpty()) {
+                            Pattern pattern = Pattern.compile("https://www.chess.com/([a-zA-Z0-9\\-]+)/game/([a-zA-Z0-9\\-]+)");
+                            Matcher matcher = pattern.matcher(clipboardText);
+                            String game_url = null;
+                            if (matcher.find()) game_url = matcher.group();
+                            if (game_url != null) {
+                                ((TextInputEditText) findViewById(R.id.urlInp)).setText(clipboardText);
+                                Toast.makeText(this, "Game URL pasted from clipboard", Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                    }
+                }
+            }
         }, 1);
 
         ((TextInputEditText) findViewById(R.id.urlInp)).addTextChangedListener(new TextWatcher() {
@@ -161,7 +197,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        findViewById(R.id.statusCont).setOnLongClickListener((e)->{
+        findViewById(R.id.statusCont).setOnLongClickListener((e) -> {
             new MaterialAlertDialogBuilder(this)
                     .setTitle("Developer Logs")
                     .setMessage(devlog)
@@ -227,7 +263,8 @@ public class MainActivity extends AppCompatActivity {
 
                 @Override
                 public void onResponse(Call call, Response response) throws IOException {
-                    if(response.body()!=null) devlog = "Response code: "+response.code()+"\nResponse body: "+response.body().string();
+                    if (response.body() != null)
+                        devlog = "Response code: " + response.code() + "\nResponse body: " + response.body().string();
                     if (response.isSuccessful() && response.body() != null) {
                         runOnUiThread(() -> {
                             findViewById(R.id.urlInp).setEnabled(true);

@@ -1,0 +1,40 @@
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <PreferenceCategory app:title="General" app:iconSpaceReserved="false">
+
+        <SwitchPreferenceCompat
+            app:key="autopaste"
+            app:iconSpaceReserved="false"
+            app:title="Auto-paste on startup"
+            app:summary="Automatically paste last copied text from clipboard on app launch"/>
+
+        <ListPreference
+            app:key="theme"
+            app:iconSpaceReserved="false"
+            app:title="Theme"
+            app:useSimpleSummaryProvider="true"
+            app:entries="@array/theme_entries"
+            app:entryValues="@array/theme_values" />
+    </PreferenceCategory>
+    <PreferenceCategory app:title="About" app:iconSpaceReserved="false">
+
+        <Preference
+            app:key="version"
+            app:iconSpaceReserved="false"
+            app:title="Version"
+            app:summary="1.0"/>
+
+        <Preference
+            app:key="release"
+            app:iconSpaceReserved="false"
+            app:title="Released on"
+            app:summary="27-Nov-2024"/>
+
+        <Preference
+            app:key="dev"
+            app:iconSpaceReserved="false"
+            app:title="Developer"
+            app:summary="Aryan Onkar"/>
+    </PreferenceCategory>
+
+</PreferenceScreen>
