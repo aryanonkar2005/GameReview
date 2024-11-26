@@ -22,8 +22,6 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
-import com.google.android.material.button.MaterialButton;
-import com.google.android.material.internal.TextWatcherAdapter;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
@@ -50,10 +48,11 @@ public class MainActivity extends AppCompatActivity {
         super.onWindowFocusChanged(hasFocus);
         try {
             updatePasteBtn();
-        }catch (Exception ignored){}
+        } catch (Exception ignored) {
+        }
     }
 
-    public void updatePasteBtn(){
+    public void updatePasteBtn() {
         if (clipboardManager.hasPrimaryClip() && clipboardManager.getPrimaryClipDescription().hasMimeType("text/plain")) {
             ClipData clipData = clipboardManager.getPrimaryClip();
             if (clipData != null && clipData.getItemCount() > 0) {
@@ -61,15 +60,16 @@ public class MainActivity extends AppCompatActivity {
                 if (!clipboardText.isEmpty())
                     enablePasteBtn();
                 else disablePasteBtn();
-            }else disablePasteBtn();
-        }else disablePasteBtn();
+            } else disablePasteBtn();
+        } else disablePasteBtn();
     }
 
-    public void enablePasteBtn(){
-        if(findViewById(R.id.spinnerCont).getVisibility() == View.GONE) findViewById(R.id.pasteBtn).setEnabled(true);
+    public void enablePasteBtn() {
+        if (findViewById(R.id.spinnerCont).getVisibility() == View.GONE)
+            findViewById(R.id.pasteBtn).setEnabled(true);
     }
 
-    public void disablePasteBtn(){
+    public void disablePasteBtn() {
         findViewById(R.id.pasteBtn).setEnabled(false);
     }
 
@@ -117,7 +117,7 @@ public class MainActivity extends AppCompatActivity {
                         Pattern pattern = Pattern.compile("https://www.chess.com/([a-zA-Z0-9\\-]+)/game/([a-zA-Z0-9\\-]+)");
                         Matcher matcher = pattern.matcher(clipboardText);
                         String game_url = null;
-                        if(matcher.find()) game_url = matcher.group();
+                        if (matcher.find()) game_url = matcher.group();
                         if (game_url != null) {
                             ((TextInputEditText) findViewById(R.id.urlInp)).setText(clipboardText);
                             Toast.makeText(this, "Game URL pasted from clipboard", Toast.LENGTH_SHORT).show();
@@ -130,12 +130,12 @@ public class MainActivity extends AppCompatActivity {
             ClipboardManager.OnPrimaryClipChangedListener clipboardListener = this::updatePasteBtn;
             clipboardManager.addPrimaryClipChangedListener(clipboardListener);
 
-            findViewById(R.id.pasteBtn).setOnClickListener((e)->{
+            findViewById(R.id.pasteBtn).setOnClickListener((e) -> {
                 if (clipboardManager.hasPrimaryClip() && clipboardManager.getPrimaryClipDescription().hasMimeType("text/plain")) {
                     ClipData clipData = clipboardManager.getPrimaryClip();
                     if (clipData != null && clipData.getItemCount() > 0) {
                         String clipText = clipData.getItemAt(0).getText().toString().trim();
-                        if(!clipText.isEmpty()) {
+                        if (!clipText.isEmpty()) {
                             ((TextInputEditText) findViewById(R.id.urlInp)).setText(clipText);
                             ((TextInputEditText) findViewById(R.id.urlInp)).setSelection(clipText.length());
                             Toast.makeText(this, "Pasted last copied text from clipboard", Toast.LENGTH_LONG).show();
@@ -145,12 +145,14 @@ public class MainActivity extends AppCompatActivity {
             });
         }, 1);
 
-        ((TextInputEditText)findViewById(R.id.urlInp)).addTextChangedListener(new TextWatcher() {
+        ((TextInputEditText) findViewById(R.id.urlInp)).addTextChangedListener(new TextWatcher() {
             @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
 
             @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            }
 
             @Override
             public void afterTextChanged(Editable s) {
