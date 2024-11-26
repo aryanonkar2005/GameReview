@@ -58,7 +58,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="32dp"
-                android:text="Step 1: Paste the URL of the chess.com game you want to review into the 'Enter game URL' input field of this app. To get the URL of the chess.com game you want to review simply open that game on chess.com mobile app and click on the share game button in the ☰ options menu. In some phones you can see the url as soon as you hit the share button in chess.com app but if you don't then share that game to yourself on whatsapp."
+                android:text="Step 1: Paste the URL of the chess.com game you want to review into the 'Enter game URL' input field of this app. To get the URL of the chess.com game you want to review simply open that game on chess.com mobile app and click on the share game button in the ☰ options menu. In some phones you can see the url as soon as you hit the share game button but if you don't then share that game to yourself on whatsapp."
                 android:textAppearance="@style/TextAppearance.Material3.BodyLarge"
                 android:textColor="@color/material_on_background_emphasis_high_type" />
 
