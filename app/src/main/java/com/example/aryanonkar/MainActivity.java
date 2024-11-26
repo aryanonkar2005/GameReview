@@ -7,6 +7,9 @@ import android.graphics.Rect;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.text.Editable;
+import android.text.NoCopySpan;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
@@ -20,6 +23,8 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.internal.TextWatcherAdapter;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
@@ -55,10 +60,18 @@ public class MainActivity extends AppCompatActivity {
             if (clipData != null && clipData.getItemCount() > 0) {
                 String clipboardText = clipData.getItemAt(0).getText().toString().trim();
                 if (!clipboardText.isEmpty())
-                    findViewById(R.id.pasteBtn).setEnabled(true);
-                else findViewById(R.id.pasteBtn).setEnabled(false);
-            }else findViewById(R.id.pasteBtn).setEnabled(false);
-        }else findViewById(R.id.pasteBtn).setEnabled(false);
+                    enablePasteBtn();
+                else disablePasteBtn();
+            }else disablePasteBtn();
+        }else disablePasteBtn();
+    }
+
+    public void enablePasteBtn(){
+        if(findViewById(R.id.spinnerCont).getVisibility() == View.GONE) findViewById(R.id.pasteBtn).setEnabled(true);
+    }
+
+    public void disablePasteBtn(){
+        findViewById(R.id.pasteBtn).setEnabled(false);
     }
 
     public void hideKeyboard() {
@@ -132,6 +145,19 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
         }, 1);
+
+        ((TextInputEditText)findViewById(R.id.urlInp)).addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                if (s.length() > 0 && Character.isWhitespace(s.charAt(0))) s.delete(0, 1);
+            }
+        });
 
         findViewById(R.id.reviewBtn).setOnClickListener((event) -> {
             if (((TextInputEditText) findViewById(R.id.urlInp)).getText().toString().isBlank()) {
