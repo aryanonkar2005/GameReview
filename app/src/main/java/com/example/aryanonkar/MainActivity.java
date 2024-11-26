@@ -42,7 +42,7 @@ import java.util.regex.Pattern;
 public class MainActivity extends AppCompatActivity {
 
     ClipboardManager clipboardManager = null;
-    String responseData = "No response";
+    String devlog = "Nothing to show";
 
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {
@@ -164,7 +164,7 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.statusCont).setOnLongClickListener((e)->{
             new MaterialAlertDialogBuilder(this)
                     .setTitle("Developer Logs")
-                    .setMessage(responseData)
+                    .setMessage(devlog)
                     .setPositiveButton("OK", (dialog, which) -> dialog.dismiss())
                     .show();
             return false;
@@ -212,7 +212,7 @@ public class MainActivity extends AppCompatActivity {
             client.newCall(request).enqueue(new Callback() {
                 @Override
                 public void onFailure(Call call, IOException e) {
-                    responseData = e.getMessage();
+                    devlog = e.getMessage();
                     runOnUiThread(() -> {
                         findViewById(R.id.urlInp).setEnabled(true);
                         findViewById(R.id.reviewBtn).setEnabled(true);
@@ -227,7 +227,7 @@ public class MainActivity extends AppCompatActivity {
 
                 @Override
                 public void onResponse(Call call, Response response) throws IOException {
-                    if(response.body()!=null) responseData = response.body().string();
+                    if(response.body()!=null) devlog = "Response code: "+response.code()+"\nResponse body: "+response.body().string();
                     if (response.isSuccessful() && response.body() != null) {
                         runOnUiThread(() -> {
                             findViewById(R.id.urlInp).setEnabled(true);
