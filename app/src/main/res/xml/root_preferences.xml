@@ -8,6 +8,18 @@
             app:title="Auto-paste on startup"
             app:summary="Automatically paste last copied text from clipboard on app launch"/>
 
+        <SwitchPreferenceCompat
+            app:key="confirm"
+            app:iconSpaceReserved="false"
+            app:title="Ask for confirmation"
+            app:summary="Ask for confirmation before starting the review process"/>
+
+        <SwitchPreferenceCompat
+            app:key="redirect"
+            app:iconSpaceReserved="false"
+            app:title="Allow redirection"
+            app:summary="Open the game in chess.com's mobile app after it has been successfully reviewed by this app"/>
+
         <ListPreference
             app:key="theme"
             app:iconSpaceReserved="false"

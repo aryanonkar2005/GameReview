@@ -2,5 +2,6 @@
 <resources>
     <style name="Base.Theme.AryanOnkar" parent="Theme.Material3.DynamicColors.DayNight.NoActionBar">
         <!-- Customize your dark theme here. -->
+        <item name="alertDialogTheme">@style/ThemeOverlay.Material3.Dialog</item>
     </style>
 </resources>

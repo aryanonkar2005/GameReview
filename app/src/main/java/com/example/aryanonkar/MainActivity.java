@@ -3,9 +3,11 @@ package com.example.aryanonkar;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Rect;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -47,7 +49,9 @@ import java.util.regex.Pattern;
 
 public class MainActivity extends AppCompatActivity {
 
-    ClipboardManager clipboardManager = null;
+    ClipboardManager clipboardManager;
+
+    SharedPreferences pref;
     String devlog = "Nothing to show";
 
     @Override
@@ -114,7 +118,8 @@ public class MainActivity extends AppCompatActivity {
             return insets;
         });
 
-        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);
+        pref = PreferenceManager.getDefaultSharedPreferences(this);
+        pref.edit().putBoolean("isReviewing", false).commit();
 
         if (pref.getString("theme", "system").equalsIgnoreCase("light"))
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
@@ -227,71 +232,90 @@ public class MainActivity extends AppCompatActivity {
                 return;
             }
 
-            ((TextInputLayout) findViewById(R.id.urlInpLayout)).setError(null);
-            ((TextInputLayout) findViewById(R.id.urlInpLayout)).setErrorEnabled(false);
-            findViewById(R.id.urlInp).setEnabled(false);
-            findViewById(R.id.reviewBtn).setEnabled(false);
-            findViewById(R.id.pasteBtn).setEnabled(false);
-            hideKeyboard();
-            findViewById(R.id.spinnerCont).setVisibility(View.VISIBLE);
-            findViewById(R.id.chessIconCont).setVisibility(View.GONE);
-            findViewById(R.id.statusCont).setVisibility(View.GONE);
-            OkHttpClient client = new OkHttpClient.Builder()
-                    .connectTimeout(240, TimeUnit.SECONDS) // Connection timeout
-                    .readTimeout(240, TimeUnit.SECONDS)    // Read timeout
-                    .writeTimeout(240, TimeUnit.SECONDS).build();
+            if (pref.getBoolean("confirm", false)) {
+                final String final_game_url = game_url;
+                new MaterialAlertDialogBuilder(this)
+                        .setTitle("Are you sure?")
+                        .setMessage("Are you sure you want to review this game? This is just to make sure that you haven't hit the review game button by mistake.")
+                        .setPositiveButton("Yes", (d, w) -> review_game(final_game_url))
+                        .setNegativeButton("No", (d, w) -> d.dismiss())
+                        .show();
+            } else review_game(game_url);
+        });
+    }
 
-            Request request = new Request.Builder()
-                    .url("https://chess-review-api.onrender.com/game-review/?game-url=" + game_url)
-                    .post(RequestBody.create("", null))
-                    .build();
+    public void review_game(String game_url) {
+        pref.edit().putBoolean("isReviewing", true).commit();
+        ((TextInputLayout) findViewById(R.id.urlInpLayout)).setError(null);
+        ((TextInputLayout) findViewById(R.id.urlInpLayout)).setErrorEnabled(false);
+        findViewById(R.id.urlInp).setEnabled(false);
+        findViewById(R.id.reviewBtn).setEnabled(false);
+        findViewById(R.id.pasteBtn).setEnabled(false);
+        hideKeyboard();
+        findViewById(R.id.spinnerCont).setVisibility(View.VISIBLE);
+        findViewById(R.id.chessIconCont).setVisibility(View.GONE);
+        findViewById(R.id.statusCont).setVisibility(View.GONE);
+        OkHttpClient client = new OkHttpClient.Builder()
+                .connectTimeout(240, TimeUnit.SECONDS) // Connection timeout
+                .readTimeout(240, TimeUnit.SECONDS)    // Read timeout
+                .writeTimeout(240, TimeUnit.SECONDS).build();
 
-            client.newCall(request).enqueue(new Callback() {
-                @Override
-                public void onFailure(Call call, IOException e) {
-                    devlog = e.getMessage();
+        Request request = new Request.Builder()
+                .url("https://chess-review-api.onrender.com/game-review/?game-url=" + game_url)
+                .post(RequestBody.create("", null))
+                .build();
+
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                devlog = e.getMessage();
+                runOnUiThread(() -> {
+                    pref.edit().putBoolean("isReviewing", false).commit();
+                    findViewById(R.id.urlInp).setEnabled(true);
+                    findViewById(R.id.reviewBtn).setEnabled(true);
+                    findViewById(R.id.pasteBtn).setEnabled(true);
+                    findViewById(R.id.spinnerCont).setVisibility(View.GONE);
+                    ((ImageView) findViewById(R.id.statusIcon)).setImageResource(R.drawable.error_icon);
+                    ((TextView) findViewById(R.id.statusTxt)).setTextColor(getColor(R.color.errorRed));
+                    ((TextView) findViewById(R.id.statusTxt)).setText("Failed to send your request");
+                    findViewById(R.id.statusCont).setVisibility(View.VISIBLE);
+                });
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                if (response.body() != null)
+                    devlog = "Response code: " + response.code() + "\nResponse body: " + response.body().string();
+                if (response.isSuccessful() && response.body() != null) {
                     runOnUiThread(() -> {
+                        pref.edit().putBoolean("isReviewing", false).commit();
+                        findViewById(R.id.urlInp).setEnabled(true);
+                        findViewById(R.id.reviewBtn).setEnabled(true);
+                        findViewById(R.id.pasteBtn).setEnabled(true);
+                        ((TextInputEditText) findViewById(R.id.urlInp)).setText("");
+                        findViewById(R.id.spinnerCont).setVisibility(View.GONE);
+                        ((ImageView) findViewById(R.id.statusIcon)).setImageResource(R.drawable.check_circle_icon);
+                        ((TextView) findViewById(R.id.statusTxt)).setTextColor(getColor(R.color.successGreen));
+                        ((TextView) findViewById(R.id.statusTxt)).setText("Game reviewed\nsuccessfully");
+                        findViewById(R.id.statusCont).setVisibility(View.VISIBLE);
+                        Toast.makeText(getApplicationContext(), "Game reviewed successfully", Toast.LENGTH_LONG).show();
+                        if (pref.getBoolean("redirect", false))
+                            startActivity(new Intent(Intent.ACTION_VIEW).setData(Uri.parse(game_url)));
+                    });
+                } else {
+                    runOnUiThread(() -> {
+                        pref.edit().putBoolean("isReviewing", false).commit();
                         findViewById(R.id.urlInp).setEnabled(true);
                         findViewById(R.id.reviewBtn).setEnabled(true);
                         findViewById(R.id.pasteBtn).setEnabled(true);
                         findViewById(R.id.spinnerCont).setVisibility(View.GONE);
                         ((ImageView) findViewById(R.id.statusIcon)).setImageResource(R.drawable.error_icon);
                         ((TextView) findViewById(R.id.statusTxt)).setTextColor(getColor(R.color.errorRed));
-                        ((TextView) findViewById(R.id.statusTxt)).setText("Failed to send your request");
+                        ((TextView) findViewById(R.id.statusTxt)).setText("Server Error");
                         findViewById(R.id.statusCont).setVisibility(View.VISIBLE);
                     });
                 }
-
-                @Override
-                public void onResponse(Call call, Response response) throws IOException {
-                    if (response.body() != null)
-                        devlog = "Response code: " + response.code() + "\nResponse body: " + response.body().string();
-                    if (response.isSuccessful() && response.body() != null) {
-                        runOnUiThread(() -> {
-                            findViewById(R.id.urlInp).setEnabled(true);
-                            findViewById(R.id.reviewBtn).setEnabled(true);
-                            findViewById(R.id.pasteBtn).setEnabled(true);
-                            ((TextInputEditText) findViewById(R.id.urlInp)).setText("");
-                            findViewById(R.id.spinnerCont).setVisibility(View.GONE);
-                            ((ImageView) findViewById(R.id.statusIcon)).setImageResource(R.drawable.check_circle_icon);
-                            ((TextView) findViewById(R.id.statusTxt)).setTextColor(getColor(R.color.successGreen));
-                            ((TextView) findViewById(R.id.statusTxt)).setText("Game reviewed\nsuccessfully");
-                            findViewById(R.id.statusCont).setVisibility(View.VISIBLE);
-                        });
-                    } else {
-                        runOnUiThread(() -> {
-                            findViewById(R.id.urlInp).setEnabled(true);
-                            findViewById(R.id.reviewBtn).setEnabled(true);
-                            findViewById(R.id.pasteBtn).setEnabled(true);
-                            findViewById(R.id.spinnerCont).setVisibility(View.GONE);
-                            ((ImageView) findViewById(R.id.statusIcon)).setImageResource(R.drawable.error_icon);
-                            ((TextView) findViewById(R.id.statusTxt)).setTextColor(getColor(R.color.errorRed));
-                            ((TextView) findViewById(R.id.statusTxt)).setText("Server Error");
-                            findViewById(R.id.statusCont).setVisibility(View.VISIBLE);
-                        });
-                    }
-                }
-            });
+            }
         });
     }
 }
