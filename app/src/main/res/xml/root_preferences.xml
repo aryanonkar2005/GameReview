@@ -4,6 +4,7 @@
 
         <SwitchPreferenceCompat
             app:key="autopaste"
+            app:defaultValue="true"
             app:iconSpaceReserved="false"
             app:title="Auto-paste on startup"
             app:summary="Automatically paste last copied text from clipboard on app launch"/>
@@ -16,6 +17,7 @@
 
         <SwitchPreferenceCompat
             app:key="redirect"
+            app:defaultValue="true"
             app:iconSpaceReserved="false"
             app:title="Allow redirection"
             app:summary="Open the game in chess.com's mobile app after it has been successfully reviewed by this app"/>

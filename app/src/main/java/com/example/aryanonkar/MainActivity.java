@@ -3,7 +3,6 @@ package com.example.aryanonkar;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Rect;
@@ -299,8 +298,10 @@ public class MainActivity extends AppCompatActivity {
                         ((TextView) findViewById(R.id.statusTxt)).setText("Game reviewed\nsuccessfully");
                         findViewById(R.id.statusCont).setVisibility(View.VISIBLE);
                         Toast.makeText(getApplicationContext(), "Game reviewed successfully", Toast.LENGTH_LONG).show();
-                        if (pref.getBoolean("redirect", false))
-                            startActivity(new Intent(Intent.ACTION_VIEW).setData(Uri.parse(game_url)));
+                        if (pref.getBoolean("redirect", false)){
+                            String redirect_url = game_url.substring(0,21) + "/analysis/game/" + game_url.substring(22, game_url.indexOf("/game/")+1) + game_url.substring(32);
+                            startActivity(new Intent(Intent.ACTION_VIEW).setData(Uri.parse(redirect_url)));
+                        }
                     });
                 } else {
                     runOnUiThread(() -> {
