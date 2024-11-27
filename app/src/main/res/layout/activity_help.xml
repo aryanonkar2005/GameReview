@@ -82,7 +82,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginVertical="32dp"
-                android:text="Do not review too many games within a short time frame and also do not review the same game multiple times. Doing so may result in Chess.com temporarily restricting this app's ability to review games for 24 hours."
+                android:text="Do not review too many games within a short period of time and also do not review a game multiple times. Doing so may result in Chess.com temporarily restricting this app's ability to review games for 24 hours."
                 android:textAppearance="?attr/textAppearanceTitleMedium"
                 android:textColor="@color/material_on_background_emphasis_high_type" />
 

@@ -103,7 +103,7 @@
             style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Enter game URL">
+            android:hint="URL of game played on chess.com">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/urlInp"
