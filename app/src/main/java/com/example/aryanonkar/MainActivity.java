@@ -260,7 +260,7 @@ public class MainActivity extends AppCompatActivity {
                 .writeTimeout(240, TimeUnit.SECONDS).build();
 
         Request request = new Request.Builder()
-                .url("https://chess-review-api.onrender.com/game-review/?game-url=" + game_url)
+                .url("http://chessgr-alb-765104997.ap-south-1.elb.amazonaws.com:8051/game-review/?game-url=" + game_url)
                 .post(RequestBody.create("", null))
                 .build();
 
