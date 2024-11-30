@@ -35,12 +35,16 @@ import com.google.android.material.textfield.TextInputLayout;
 
 import okhttp3.Call;
 import okhttp3.Callback;
+import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
@@ -254,14 +258,31 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.spinnerCont).setVisibility(View.VISIBLE);
         findViewById(R.id.chessIconCont).setVisibility(View.GONE);
         findViewById(R.id.statusCont).setVisibility(View.GONE);
-        OkHttpClient client = new OkHttpClient.Builder()
-                .connectTimeout(240, TimeUnit.SECONDS) // Connection timeout
-                .readTimeout(240, TimeUnit.SECONDS)    // Read timeout
-                .writeTimeout(240, TimeUnit.SECONDS).build();
 
+        OkHttpClient client = new OkHttpClient();
+        String encodedUrl = null;
+        try {
+            encodedUrl = URLEncoder.encode(game_url, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            devlog = e.getMessage();
+            pref.edit().putBoolean("isReviewing", false).commit();
+            findViewById(R.id.urlInp).setEnabled(true);
+            findViewById(R.id.reviewBtn).setEnabled(true);
+            findViewById(R.id.pasteBtn).setEnabled(true);
+            findViewById(R.id.spinnerCont).setVisibility(View.GONE);
+            ((ImageView) findViewById(R.id.statusIcon)).setImageResource(R.drawable.error_icon);
+            ((TextView) findViewById(R.id.statusTxt)).setTextColor(getColor(R.color.errorRed));
+            ((TextView) findViewById(R.id.statusTxt)).setText("Could not send your request");
+            findViewById(R.id.statusCont).setVisibility(View.VISIBLE);
+        }
+        String bodyContent = "action=send_message&message=" + encodedUrl;
+        RequestBody body = RequestBody.create(
+                bodyContent,
+                MediaType.parse("application/x-www-form-urlencoded; charset=UTF-8")
+        );
         Request request = new Request.Builder()
-                .url("http://chessgr-alb-765104997.ap-south-1.elb.amazonaws.com:8051/game-review/?game-url=" + game_url)
-                .post(RequestBody.create("", null))
+                .url("https://analysis-chess.io.vn/wp-admin/admin-ajax.php")
+                .post(body)
                 .build();
 
         client.newCall(request).enqueue(new Callback() {
@@ -298,8 +319,8 @@ public class MainActivity extends AppCompatActivity {
                         ((TextView) findViewById(R.id.statusTxt)).setText("Game reviewed\nsuccessfully");
                         findViewById(R.id.statusCont).setVisibility(View.VISIBLE);
                         Toast.makeText(getApplicationContext(), "Game reviewed successfully", Toast.LENGTH_LONG).show();
-                        if (pref.getBoolean("redirect", false)){
-                            String redirect_url = game_url.substring(0,21) + "/analysis/game/" + game_url.substring(22, game_url.indexOf("/game/")+1) + game_url.substring(32);
+                        if (pref.getBoolean("redirect", false)) {
+                            String redirect_url = game_url.substring(0, 21) + "/analysis/game/" + game_url.substring(22, game_url.indexOf("/game/") + 1) + game_url.substring(32);
                             startActivity(new Intent(Intent.ACTION_VIEW).setData(Uri.parse(redirect_url)));
                         }
                     });
@@ -316,6 +337,7 @@ public class MainActivity extends AppCompatActivity {
                         findViewById(R.id.statusCont).setVisibility(View.VISIBLE);
                     });
                 }
+
             }
         });
     }
