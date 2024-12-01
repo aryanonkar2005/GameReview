@@ -86,6 +86,16 @@
                 android:textAlignment="center"
                 android:text="Game Reviewed\nSuccessfully"
                 android:textAppearance="@style/TextAppearance.Material3.TitleSmall" />
+            <TextView
+                android:id="@+id/openInApp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:textAlignment="center"
+                android:text="Click to open on chess.com"
+                android:textColor="?attr/colorSecondary"
+                android:textAppearance="@style/TextAppearance.Material3.BodyMedium" />
+
         </LinearLayout>
     </LinearLayout>
 
