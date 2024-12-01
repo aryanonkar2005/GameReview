@@ -249,27 +249,6 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    public void onSuccess() {
-        runOnUiThread(() -> {
-            pref.edit().putBoolean("isReviewing", false).apply();
-            findViewById(R.id.urlInp).setEnabled(true);
-            findViewById(R.id.reviewBtn).setEnabled(true);
-            findViewById(R.id.pasteBtn).setEnabled(true);
-            ((TextInputEditText) findViewById(R.id.urlInp)).setText("");
-            findViewById(R.id.spinnerCont).setVisibility(View.GONE);
-            ((ImageView) findViewById(R.id.statusIcon)).setImageResource(R.drawable.check_circle_icon);
-            ((TextView) findViewById(R.id.statusTxt)).setTextColor(getColor(R.color.successGreen));
-            ((TextView) findViewById(R.id.statusTxt)).setText("Game reviewed\nsuccessfully");
-            findViewById(R.id.statusCont).setVisibility(View.VISIBLE);
-            if(pref.getBoolean("onSuccSnackDSA", false))
-            Toast.makeText(getApplicationContext(), "Game reviewed successfully", Toast.LENGTH_LONG).show();
-            if (pref.getBoolean("redirect", false)) {
-                String redirect_url = game_url.substring(0, 21) + "/analysis/game/" + game_url.substring(22, game_url.indexOf("/game/") + 1) + game_url.substring(32);
-                startActivity(new Intent(Intent.ACTION_VIEW).setData(Uri.parse(redirect_url)));
-            }
-        });
-    }
-
     public void display_error(String err, String log) {
         devlog = log;
         runOnUiThread(() -> {
@@ -281,6 +260,7 @@ public class MainActivity extends AppCompatActivity {
             ((ImageView) findViewById(R.id.statusIcon)).setImageResource(R.drawable.error_icon);
             ((TextView) findViewById(R.id.statusTxt)).setTextColor(getColor(R.color.errorRed));
             ((TextView) findViewById(R.id.statusTxt)).setText("Could not send your request");
+            findViewById(R.id.openInApp).setVisibility(View.GONE);
             findViewById(R.id.statusCont).setVisibility(View.VISIBLE);
         });
     }
@@ -333,7 +313,25 @@ public class MainActivity extends AppCompatActivity {
                             new Handler(Looper.getMainLooper()).postDelayed(() -> {
                                 runOnUiThread(() -> ((TextView) findViewById(R.id.spinnerTxt)).setText("Reviewing...\n(75% completed)"));
                                 new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                                    onSuccess();
+                                    runOnUiThread(() -> {
+                                        pref.edit().putBoolean("isReviewing", false).apply();
+                                        findViewById(R.id.urlInp).setEnabled(true);
+                                        findViewById(R.id.reviewBtn).setEnabled(true);
+                                        findViewById(R.id.pasteBtn).setEnabled(true);
+                                        ((TextInputEditText) findViewById(R.id.urlInp)).setText("");
+                                        findViewById(R.id.spinnerCont).setVisibility(View.GONE);
+                                        ((ImageView) findViewById(R.id.statusIcon)).setImageResource(R.drawable.check_circle_icon);
+                                        ((TextView) findViewById(R.id.statusTxt)).setTextColor(getColor(R.color.successGreen));
+                                        ((TextView) findViewById(R.id.statusTxt)).setText("Game reviewed\nsuccessfully");
+                                        findViewById(R.id.openInApp).setVisibility(View.VISIBLE);
+                                        findViewById(R.id.statusCont).setVisibility(View.VISIBLE);
+                                        if(pref.getBoolean("onSuccSnackDSA", false))
+                                            Toast.makeText(getApplicationContext(), "Game reviewed successfully", Toast.LENGTH_LONG).show();
+                                        if (pref.getBoolean("redirect", false)) {
+                                            String redirect_url = game_url.substring(0, 21) + "/analysis/game/" + game_url.substring(22, game_url.indexOf("/game/") + 1) + game_url.substring(32);
+                                            startActivity(new Intent(Intent.ACTION_VIEW).setData(Uri.parse(redirect_url)));
+                                        }
+                                    });
                                     if (!pref.getBoolean("redirect", false)) {
                                         if (!pref.getBoolean("onSuccSnackDSA", false)) {
                                             Snackbar snackbar = Snackbar.make(findViewById(android.R.id.content), "Now open this game on chess.com's website or mobile app and click their light green colored game review button. This time they won't ask you to purchase a platinum or diamond subscription to review this game.", Snackbar.LENGTH_INDEFINITE);
