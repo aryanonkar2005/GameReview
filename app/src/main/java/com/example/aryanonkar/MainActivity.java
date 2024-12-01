@@ -77,7 +77,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void enablePasteBtn() {
-        if (findViewById(R.id.spinnerCont).getVisibility() == View.GONE)
+        if (!pref.getBoolean("isReviewing", false))
             findViewById(R.id.pasteBtn).setEnabled(true);
     }
 
