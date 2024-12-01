@@ -92,7 +92,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
                 android:textAlignment="center"
-                android:text="Click to open on chess.com"
+                android:text="Click to open game on chess.com"
                 android:textColor="?attr/colorSecondary"
                 android:textAppearance="@style/TextAppearance.Material3.BodyMedium" />
 
