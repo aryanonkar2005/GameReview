@@ -60,7 +60,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:text="Reveiwing"
+                android:textAlignment="center"
+                android:text="Sending review request..."
                 android:textAppearance="@style/TextAppearance.Material3.TitleSmall" />
 
         </LinearLayout>

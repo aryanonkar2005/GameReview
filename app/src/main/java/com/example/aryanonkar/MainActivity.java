@@ -44,16 +44,13 @@ import okhttp3.Response;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class MainActivity extends AppCompatActivity {
 
     ClipboardManager clipboardManager;
-
     SharedPreferences pref;
     String devlog = "Nothing to show";
 
@@ -247,24 +244,9 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    public void review_game(String game_url) {
-        pref.edit().putBoolean("isReviewing", true).commit();
-        ((TextInputLayout) findViewById(R.id.urlInpLayout)).setError(null);
-        ((TextInputLayout) findViewById(R.id.urlInpLayout)).setErrorEnabled(false);
-        findViewById(R.id.urlInp).setEnabled(false);
-        findViewById(R.id.reviewBtn).setEnabled(false);
-        findViewById(R.id.pasteBtn).setEnabled(false);
-        hideKeyboard();
-        findViewById(R.id.spinnerCont).setVisibility(View.VISIBLE);
-        findViewById(R.id.chessIconCont).setVisibility(View.GONE);
-        findViewById(R.id.statusCont).setVisibility(View.GONE);
-
-        OkHttpClient client = new OkHttpClient();
-        String encodedUrl = null;
-        try {
-            encodedUrl = URLEncoder.encode(game_url, "UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            devlog = e.getMessage();
+    public void display_error(String err, String log) {
+        devlog = log;
+        runOnUiThread(() -> {
             pref.edit().putBoolean("isReviewing", false).commit();
             findViewById(R.id.urlInp).setEnabled(true);
             findViewById(R.id.reviewBtn).setEnabled(true);
@@ -274,6 +256,28 @@ public class MainActivity extends AppCompatActivity {
             ((TextView) findViewById(R.id.statusTxt)).setTextColor(getColor(R.color.errorRed));
             ((TextView) findViewById(R.id.statusTxt)).setText("Could not send your request");
             findViewById(R.id.statusCont).setVisibility(View.VISIBLE);
+        });
+    }
+
+    public void review_game(String game_url) {
+        pref.edit().putBoolean("isReviewing", true).commit();
+        ((TextInputLayout) findViewById(R.id.urlInpLayout)).setError(null);
+        ((TextInputLayout) findViewById(R.id.urlInpLayout)).setErrorEnabled(false);
+        findViewById(R.id.urlInp).setEnabled(false);
+        findViewById(R.id.reviewBtn).setEnabled(false);
+        findViewById(R.id.pasteBtn).setEnabled(false);
+        hideKeyboard();
+        ((TextView) findViewById(R.id.spinnerTxt)).setText("Sending review request...");
+        findViewById(R.id.spinnerCont).setVisibility(View.VISIBLE);
+        findViewById(R.id.chessIconCont).setVisibility(View.GONE);
+        findViewById(R.id.statusCont).setVisibility(View.GONE);
+
+        OkHttpClient client = new OkHttpClient();
+        String encodedUrl = null;
+        try {
+            encodedUrl = URLEncoder.encode(game_url, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            display_error("Unable to send your request", e.getMessage());
         }
         String bodyContent = "action=send_message&message=" + encodedUrl;
         RequestBody body = RequestBody.create(
@@ -288,56 +292,44 @@ public class MainActivity extends AppCompatActivity {
         client.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
-                devlog = e.getMessage();
-                runOnUiThread(() -> {
-                    pref.edit().putBoolean("isReviewing", false).commit();
-                    findViewById(R.id.urlInp).setEnabled(true);
-                    findViewById(R.id.reviewBtn).setEnabled(true);
-                    findViewById(R.id.pasteBtn).setEnabled(true);
-                    findViewById(R.id.spinnerCont).setVisibility(View.GONE);
-                    ((ImageView) findViewById(R.id.statusIcon)).setImageResource(R.drawable.error_icon);
-                    ((TextView) findViewById(R.id.statusTxt)).setTextColor(getColor(R.color.errorRed));
-                    ((TextView) findViewById(R.id.statusTxt)).setText("Failed to send your request");
-                    findViewById(R.id.statusCont).setVisibility(View.VISIBLE);
-                });
+                display_error("Failed to send your request", e.getMessage());
             }
 
             @Override
             public void onResponse(Call call, Response response) throws IOException {
+                String log = "";
                 if (response.body() != null)
-                    devlog = "Response code: " + response.code() + "\nResponse body: " + response.body().string();
+                    log = "Response code: " + response.code() + "\nResponse body: " + response.body().string();
                 if (response.isSuccessful() && response.body() != null) {
-                    runOnUiThread(() -> {
-                        pref.edit().putBoolean("isReviewing", false).commit();
-                        findViewById(R.id.urlInp).setEnabled(true);
-                        findViewById(R.id.reviewBtn).setEnabled(true);
-                        findViewById(R.id.pasteBtn).setEnabled(true);
-                        ((TextInputEditText) findViewById(R.id.urlInp)).setText("");
-                        findViewById(R.id.spinnerCont).setVisibility(View.GONE);
-                        ((ImageView) findViewById(R.id.statusIcon)).setImageResource(R.drawable.check_circle_icon);
-                        ((TextView) findViewById(R.id.statusTxt)).setTextColor(getColor(R.color.successGreen));
-                        ((TextView) findViewById(R.id.statusTxt)).setText("Game reviewed\nsuccessfully");
-                        findViewById(R.id.statusCont).setVisibility(View.VISIBLE);
-                        Toast.makeText(getApplicationContext(), "Game reviewed successfully", Toast.LENGTH_LONG).show();
-                        if (pref.getBoolean("redirect", false)) {
-                            String redirect_url = game_url.substring(0, 21) + "/analysis/game/" + game_url.substring(22, game_url.indexOf("/game/") + 1) + game_url.substring(32);
-                            startActivity(new Intent(Intent.ACTION_VIEW).setData(Uri.parse(redirect_url)));
-                        }
-                    });
+                    runOnUiThread(() -> ((TextView) findViewById(R.id.spinnerTxt)).setText("Request sent successfully\nInitializing game review..."));
+                    new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                        runOnUiThread(() -> ((TextView) findViewById(R.id.spinnerTxt)).setText("Reviewing...\n(25% completed)"));
+                        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                            runOnUiThread(() -> ((TextView) findViewById(R.id.spinnerTxt)).setText("Reviewing...\n(75% completed)"));
+                            new Handler(Looper.getMainLooper()).postDelayed(()->{
+                                runOnUiThread(()-> {
+                                    pref.edit().putBoolean("isReviewing", false).commit();
+                                    findViewById(R.id.urlInp).setEnabled(true);
+                                    findViewById(R.id.reviewBtn).setEnabled(true);
+                                    findViewById(R.id.pasteBtn).setEnabled(true);
+                                    ((TextInputEditText) findViewById(R.id.urlInp)).setText("");
+                                    findViewById(R.id.spinnerCont).setVisibility(View.GONE);
+                                    ((ImageView) findViewById(R.id.statusIcon)).setImageResource(R.drawable.check_circle_icon);
+                                    ((TextView) findViewById(R.id.statusTxt)).setTextColor(getColor(R.color.successGreen));
+                                    ((TextView) findViewById(R.id.statusTxt)).setText("Game reviewed\nsuccessfully");
+                                    findViewById(R.id.statusCont).setVisibility(View.VISIBLE);
+                                    Toast.makeText(getApplicationContext(), "Game reviewed successfully", Toast.LENGTH_LONG).show();
+                                    if (pref.getBoolean("redirect", false)) {
+                                        String redirect_url = game_url.substring(0, 21) + "/analysis/game/" + game_url.substring(22, game_url.indexOf("/game/") + 1) + game_url.substring(32);
+                                        startActivity(new Intent(Intent.ACTION_VIEW).setData(Uri.parse(redirect_url)));
+                                    }
+                                });
+                            }, 1000);
+                        }, 1500);
+                    }, 2500);
                 } else {
-                    runOnUiThread(() -> {
-                        pref.edit().putBoolean("isReviewing", false).commit();
-                        findViewById(R.id.urlInp).setEnabled(true);
-                        findViewById(R.id.reviewBtn).setEnabled(true);
-                        findViewById(R.id.pasteBtn).setEnabled(true);
-                        findViewById(R.id.spinnerCont).setVisibility(View.GONE);
-                        ((ImageView) findViewById(R.id.statusIcon)).setImageResource(R.drawable.error_icon);
-                        ((TextView) findViewById(R.id.statusTxt)).setTextColor(getColor(R.color.errorRed));
-                        ((TextView) findViewById(R.id.statusTxt)).setText("Server Error");
-                        findViewById(R.id.statusCont).setVisibility(View.VISIBLE);
-                    });
+                    display_error("Server Error", log);
                 }
-
             }
         });
     }
