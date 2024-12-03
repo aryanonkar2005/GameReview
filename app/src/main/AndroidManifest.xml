@@ -9,7 +9,6 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/Base.Theme.AryanOnkar"
-        android:usesCleartextTraffic="true"
         tools:targetApi="31">
         <activity
             android:name=".HelpActivity"
