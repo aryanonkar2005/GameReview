@@ -1,5 +1,5 @@
 [versions]
-agp = "8.7.2"
+agp = "8.7.3"
 httpclient5 = "5.4"
 junit = "4.13.2"
 junitVersion = "1.2.1"
@@ -14,6 +14,10 @@ seleniumJava = "4.26.0"
 preference = "1.2.0"
 preferenceVersion = "1.2.1"
 preferenceLeanbackV17 = "28.0.0"
+firebaseBom = "33.7.0"
+firebaseAnalytics = "22.1.2"
+firebaseFirestore = "25.1.1"
+firebaseDatabase = "21.0.0"
 
 [libraries]
 httpclient5 = { module = "org.apache.httpcomponents.client5:httpclient5", version.ref = "httpclient5" }
@@ -30,6 +34,10 @@ selenium-java = { group = "org.seleniumhq.selenium", name = "selenium-java", ver
 preference = { group = "androidx.preference", name = "preference", version.ref = "preference" }
 androidx-preference = { group = "androidx.preference", name = "preference", version.ref = "preferenceVersion" }
 preference-leanback-v17 = { group = "com.android.support", name = "preference-leanback-v17", version.ref = "preferenceLeanbackV17" }
+firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }
+firebase-analytics = { group = "com.google.firebase", name = "firebase-analytics", version.ref = "firebaseAnalytics" }
+firebase-firestore = { group = "com.google.firebase", name = "firebase-firestore", version.ref = "firebaseFirestore" }
+firebase-database = { group = "com.google.firebase", name = "firebase-database", version.ref = "firebaseDatabase" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

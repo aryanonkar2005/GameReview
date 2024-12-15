@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "313235927509",
+    "firebase_url": "https://chessgr-43221-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "chessgr-43221",
+    "storage_bucket": "chessgr-43221.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:313235927509:android:a4b20a162d1f70a97acd5c",
+        "android_client_info": {
+          "package_name": "com.example.aryanonkar"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD_V6GJlqAQxtcc98__f4K0YAsiWwrLMDk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

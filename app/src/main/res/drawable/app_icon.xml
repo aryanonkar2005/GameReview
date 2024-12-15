@@ -2,6 +2,6 @@
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
     <background android:drawable="@color/white"/>
     <foreground>
-        <inset android:drawable="@drawable/chess_icon" android:inset="30%"/>
+        <inset android:drawable="@drawable/chess_icon" android:inset="32%"/>
     </foreground>
 </adaptive-icon>

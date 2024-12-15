@@ -1,4 +1,4 @@
 <resources>
-    <string name="app_name">Game Reviewer</string>
+    <string name="app_name">Chess GR</string>
     <string name="title_activity_settings">SettingsActivity</string>
 </resources>
