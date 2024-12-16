@@ -248,6 +248,7 @@ public class MainActivity extends AppCompatActivity {
                         .show();
             } else review_game();
         });
+
     }
 
     public void display_error(String err, String log) {
@@ -260,7 +261,7 @@ public class MainActivity extends AppCompatActivity {
             findViewById(R.id.spinnerCont).setVisibility(View.GONE);
             ((ImageView) findViewById(R.id.statusIcon)).setImageResource(R.drawable.error_icon);
             ((TextView) findViewById(R.id.statusTxt)).setTextColor(getColor(R.color.errorRed));
-            ((TextView) findViewById(R.id.statusTxt)).setText("Could not send your request");
+            ((TextView) findViewById(R.id.statusTxt)).setText(err);
             findViewById(R.id.openInApp).setVisibility(View.GONE);
             findViewById(R.id.statusCont).setVisibility(View.VISIBLE);
         });
@@ -307,6 +308,7 @@ public class MainActivity extends AppCompatActivity {
                 String log = "";
                 if (response.body() != null)
                     log = "Response code: " + response.code() + "\nResponse body: " + response.body().string();
+                devlog = log;
                 if (response.isSuccessful() && response.body() != null) {
                     runOnUiThread(() -> ((TextView) findViewById(R.id.spinnerTxt)).setText("Request sent successfully\nInitializing game review..."));
                     new Handler(Looper.getMainLooper()).postDelayed(() -> {
