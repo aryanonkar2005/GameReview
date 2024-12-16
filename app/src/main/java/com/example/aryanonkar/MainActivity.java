@@ -309,7 +309,7 @@ public class MainActivity extends AppCompatActivity {
                 if (response.body() != null)
                     log = "Response code: " + response.code() + "\nResponse body: " + response.body().string();
                 devlog = log;
-                if (response.isSuccessful() && response.body() != null) {
+                if (response.isSuccessful() && response.body() != null && !log.contains("\"success\":false")) {
                     runOnUiThread(() -> ((TextView) findViewById(R.id.spinnerTxt)).setText("Request sent successfully\nInitializing game review..."));
                     new Handler(Looper.getMainLooper()).postDelayed(() -> {
                         runOnUiThread(() -> ((TextView) findViewById(R.id.spinnerTxt)).setText("Reviewing...\n(25% completed)"));
