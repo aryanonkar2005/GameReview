@@ -10,6 +10,8 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Rect;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -299,6 +301,15 @@ public class MainActivity extends AppCompatActivity {
                 });
     }
 
+    public static boolean isInternetAvailable(Context context) {
+        ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        if (cm != null) {
+            NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+            return activeNetwork != null && activeNetwork.isConnected();
+        }
+        return false;
+    }
+
     public void showEnterAccessCodeDialog() {
         View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_input, null);
         TextInputLayout inpLayout = dialogView.findViewById(R.id.inpLayout);
@@ -332,10 +343,15 @@ public class MainActivity extends AppCompatActivity {
         dialog.setCancelable(false);
         dialog.show();
         dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
+            if (!isInternetAvailable(this)) {
+                Toast.makeText(this, "No internet. Try again", Toast.LENGTH_SHORT).show();
+                return;
+            }
             dialog.setTitle("Verifying access code...");
             dialog.setMessage("Please have patience as this process can take up to 30 seconds.");
             inpLayout.setEnabled(false);
             inpCont.setPadding((int) (24 * scale), (int) (16 * scale), (int) (24 * scale), 0);
+
             FirebaseUtils.getFirebaseDb().getReference("unused-access-code").addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot snapshot) {
@@ -361,16 +377,22 @@ public class MainActivity extends AppCompatActivity {
                                     .setMessage("Must be less than 32 characters.")
                                     .setView(unameDialogView)
                                     .setNegativeButton("Exit", (d, e) -> System.exit(0))
-                                    .setPositiveButton("Submit", (d, e) -> {
-                                        FirebaseUtils.getFirebaseDb().getReference("unused-access-code").removeValue();
-                                        String androidId = Settings.Secure.getString(MainActivity.this.getContentResolver(), Settings.Secure.ANDROID_ID);
-                                        FirebaseUtils.getFirestore().collection("users").document(androidId).set(new HashMap<String, Object>(Map.of(
-                                                "Username", unameInpEditText.getText().toString().trim(), "Blocked", false, "Device model", Build.MODEL,
-                                                "Last game reviewed on", ": No game reviewed till now", "Games reviewed till now", 0)));
-                                    }).create();
+                                    .setPositiveButton("Submit", null).create();
                             unameDialog.setCancelable(false);
                             unameDialog.setCanceledOnTouchOutside(false);
                             unameDialog.show();
+                            unameDialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
+                                if (!isInternetAvailable(getApplicationContext())) {
+                                    Toast.makeText(getApplicationContext(), "No internet. Try again", Toast.LENGTH_SHORT).show();
+                                    return;
+                                }
+                                FirebaseUtils.getFirebaseDb().getReference("unused-access-code").removeValue();
+                                String androidId = Settings.Secure.getString(MainActivity.this.getContentResolver(), Settings.Secure.ANDROID_ID);
+                                FirebaseUtils.getFirestore().collection("users").document(androidId).set(new HashMap<String, Object>(Map.of(
+                                        "Username", unameInpEditText.getText().toString().trim(), "Blocked", false, "Device model", Build.MODEL,
+                                        "Last game reviewed on", ": No game reviewed till now", "Games reviewed till now", 0)));
+                                unameDialog.dismiss();
+                            });
                         } else {
                             dialog.setTitle("Enter access code");
                             dialog.setMessage("To get access code contact Aryan Onkar.");
