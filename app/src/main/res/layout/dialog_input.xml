@@ -16,7 +16,7 @@
         tools:ignore="MissingPrefix">
 
         <com.google.android.material.textfield.TextInputEditText
-            android:maxLength="6"
+            android:maxLength="4"
             android:id="@+id/inp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

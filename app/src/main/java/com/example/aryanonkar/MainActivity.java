@@ -57,6 +57,7 @@ import com.google.firebase.firestore.FirebaseFirestoreException;
 
 import okhttp3.Call;
 import okhttp3.Callback;
+import okhttp3.FormBody;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -73,6 +74,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -204,7 +206,7 @@ public class MainActivity extends AppCompatActivity {
                     if (clipData != null && clipData.getItemCount() > 0) {
                         String clipboardText = clipData.getItemAt(0).getText().toString().trim();
                         if (!clipboardText.isEmpty()) {
-                            Pattern pattern = Pattern.compile("https://www.chess.com/([a-zA-Z0-9\\-]+)/game/([a-zA-Z0-9\\-]+)");
+                            Pattern pattern = Pattern.compile("https://www\\.chess\\.com/[a-z0-9/]+\\S");
                             Matcher matcher = pattern.matcher(clipboardText);
                             String game_url = null;
                             if (matcher.find()) game_url = matcher.group();
@@ -219,7 +221,13 @@ public class MainActivity extends AppCompatActivity {
         }, 1);
 
         findViewById(R.id.openInApp).setOnClickListener((e) -> {
-            String redirect_url = game_url.substring(0, 21) + "/analysis/game/" + game_url.substring(22, game_url.indexOf("/game/") + 1) + game_url.substring(32);
+            String redirect_url;
+            String[] subdirs = game_url.substring(22).split("/");
+            if(subdirs[0].equals("game")){
+                redirect_url = "https://www.chess.com/analysis/game/" + subdirs[1] + "/" + subdirs[2];
+            }else{
+                redirect_url = "https://www.chess.com/analysis/game/" + subdirs[0] + "/" + subdirs[2];
+            }
             startActivity(new Intent(Intent.ACTION_VIEW).setData(Uri.parse(redirect_url)));
         });
 
@@ -254,7 +262,7 @@ public class MainActivity extends AppCompatActivity {
             }
             String raw_url_inp = Objects.requireNonNull(((TextInputEditText) findViewById(R.id.urlInp)).getText()).toString();
 
-            Pattern pattern = Pattern.compile("https://www.chess.com/([a-zA-Z0-9\\-]+)/game/([a-zA-Z0-9\\-]+)");
+            Pattern pattern = Pattern.compile("https://www\\.chess\\.com/[a-z0-9/]+\\S");
             Matcher matcher = pattern.matcher(raw_url_inp);
             if (matcher.find()) game_url = matcher.group();
 
@@ -331,11 +339,9 @@ public class MainActivity extends AppCompatActivity {
             FirebaseUtils.getFirebaseDb().getReference("unused-access-code").addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot snapshot) {
-                    String code;
+                    String code = "null";
                     if (snapshot.getValue() != null)
-                        code = String.valueOf(((HashMap<Integer, String>) snapshot.getValue()).keySet().stream().findFirst());
-                    else
-                        code = "null";
+                        code = String.valueOf(((HashMap<Integer, String>) snapshot.getValue()).keySet().stream().findFirst().get());
                     if (inpEditText.getText().toString().contentEquals(code)) {
                         Toast.makeText(MainActivity.this, "OTP was correct", Toast.LENGTH_LONG).show();
                         dialog.dismiss();
@@ -347,12 +353,11 @@ public class MainActivity extends AppCompatActivity {
                                 .setView(unameDialogView)
                                 .setNegativeButton("Exit", (d, e) -> System.exit(0))
                                 .setPositiveButton("Submit", (d, e) -> {
+                                    FirebaseUtils.getFirebaseDb().getReference("unused-access-code").removeValue();
                                     String androidId = Settings.Secure.getString(MainActivity.this.getContentResolver(), Settings.Secure.ANDROID_ID);
                                     FirebaseUtils.getFirestore().collection("users").document(androidId).set(new HashMap<String, Object>(Map.of(
                                             "Username", unameInpEditText.getText().toString().trim(), "Blocked", false, "Device model", Build.MODEL,
-                                            "Last game reviewed on", "No game reviewed till now", "Games reviewed today",
-                                            0, "Games reviewed till now", 0,
-                                            "History", new HashMap<String, String>())));
+                                            "Last game reviewed on", ": No game reviewed till now", "Games reviewed till now", 0)));
                                 }).create();
                         unameDialog.setCancelable(false);
                         unameDialog.setCanceledOnTouchOutside(false);
@@ -416,104 +421,92 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.statusCont).setVisibility(View.GONE);
 
         String androidId = Settings.Secure.getString(MainActivity.this.getContentResolver(), Settings.Secure.ANDROID_ID);
-        FirebaseUtils.getFirestore().collection("users").document(androidId).get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
-            @Override
-            public void onSuccess(DocumentSnapshot snapshot) {
-                if (!snapshot.exists()) {
-                    display_error("Access denied.\nUser not registered.", "Contact developer to get yourself registered");
-                    showEnterAccessCodeDialog();
-                }
-                if (snapshot.get("Blocked", boolean.class)) {
-                    display_error("Access denied by developer", "You have been temporarily denied access to this application." +
-                            "This could be due to abuse or misuse of this application." +
-                            "Contact developer for more information.");
-                    showBlockedDialog();
-                    return;
-                }
-                OkHttpClient client = new OkHttpClient();
-                String encodedUrl = null;
-                try {
-                    encodedUrl = URLEncoder.encode(game_url, "UTF-8");
-                } catch (UnsupportedEncodingException e) {
-                    display_error("Unable to send your request", e.getMessage());
-                }
-                String bodyContent = "action=send_message&message=" + encodedUrl;
-                RequestBody body = RequestBody.create(
-                        bodyContent,
-                        MediaType.parse("application/x-www-form-urlencoded; charset=UTF-8")
-                );
-                Request request = new Request.Builder()
-                        .url("https://analysis-chess.io.vn/wp-admin/admin-ajax.php")
-                        .post(body)
-                        .build();
-
-                client.newCall(request).enqueue(new Callback() {
-                    @Override
-                    public void onFailure(Call call, IOException e) {
-                        display_error("Failed to send your request", e.getMessage());
-                    }
-
-                    @Override
-                    public void onResponse(Call call, Response response) throws IOException {
-                        String log = "Nothing to show";
-                        if (response.body() != null)
-                            log = "Response code: " + response.code() + "\nResponse body: " + response.body().string();
-                        if (response.isSuccessful() && response.body() != null && !log.contains("\"success\":false")) {
-                            runOnUiThread(() -> ((TextView) findViewById(R.id.spinnerTxt)).setText("Request sent successfully\nInitializing game review..."));
-                            new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                                runOnUiThread(() -> ((TextView) findViewById(R.id.spinnerTxt)).setText("Reviewing...\n(25% completed)"));
-                                new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                                    runOnUiThread(() -> ((TextView) findViewById(R.id.spinnerTxt)).setText("Reviewing...\n(75% completed)"));
-                                    new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                                        runOnUiThread(() -> {
-                                            String androidId = Settings.Secure.getString(MainActivity.this.getContentResolver(), Settings.Secure.ANDROID_ID);
-                                            FirebaseUtils.getFirestore().collection("users").document(androidId).get().addOnSuccessListener((s) -> {
-                                                HashMap<String, String> historyMap = ((HashMap<String, String>) s.get("History"));
-                                                historyMap.put(LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MMM-yyyy hh:mm:ss a")), game_url);
-                                                FirebaseUtils.getFirestore().collection("users").document(androidId)
-                                                        .update("History", historyMap, "Last game reviewed on", LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MMM-yyyy hh:mm:ss a")), "Games reviewed till now", ((Long) s.get("Games reviewed till now")) + 1);
-                                            });
-                                            pref.edit().putBoolean("isReviewing", false).apply();
-                                            findViewById(R.id.urlInp).setEnabled(true);
-                                            findViewById(R.id.reviewBtn).setEnabled(true);
-                                            findViewById(R.id.pasteBtn).setEnabled(true);
-                                            ((TextInputEditText) findViewById(R.id.urlInp)).setText("");
-                                            findViewById(R.id.spinnerCont).setVisibility(View.GONE);
-                                            ((ImageView) findViewById(R.id.statusIcon)).setImageResource(R.drawable.check_circle_icon);
-                                            ((TextView) findViewById(R.id.statusTxt)).setTextColor(getColor(R.color.successGreen));
-                                            ((TextView) findViewById(R.id.statusTxt)).setText("Game reviewed\nsuccessfully");
-                                            findViewById(R.id.openInApp).setVisibility(View.VISIBLE);
-                                            findViewById(R.id.statusCont).setVisibility(View.VISIBLE);
-                                            if (pref.getBoolean("onSuccSnackDSA", false))
-                                                Toast.makeText(getApplicationContext(), "Game reviewed successfully", Toast.LENGTH_LONG).show();
-                                            if (pref.getBoolean("redirect", false)) {
-                                                String redirect_url = game_url.substring(0, 21) + "/analysis/game/" + game_url.substring(22, game_url.indexOf("/game/") + 1) + game_url.substring(32);
-                                                startActivity(new Intent(Intent.ACTION_VIEW).setData(Uri.parse(redirect_url)));
-                                            }
-                                        });
-                                        if (!pref.getBoolean("redirect", false)) {
-                                            if (!pref.getBoolean("onSuccSnackDSA", false)) {
-                                                Snackbar snackbar = Snackbar.make(findViewById(android.R.id.content), "Now open this game on chess.com's website or mobile app and click their light green colored game review button. This time they won't ask you to purchase a platinum or diamond subscription to review this game.", Snackbar.LENGTH_INDEFINITE);
-                                                View snackbarView = snackbar.getView();
-                                                TextView textView = snackbarView.findViewById(com.google.android.material.R.id.snackbar_text);
-                                                textView.setMaxLines(10);
-                                                textView.setEllipsize(null);
-                                                textView.setSingleLine(false);
-                                                snackbar.setAction("Don't show again", (e) -> {
-                                                    pref.edit().putBoolean("onSuccSnackDSA", true).apply();
-                                                });
-                                                snackbar.show();
-                                            }
-                                        }
-                                    }, 1000);
-                                }, 1500);
-                            }, 2500);
-                        } else {
-                            display_error("Server Error", log);
-                        }
-                    }
-                });
+        FirebaseUtils.getFirestore().collection("users").document(androidId).get().addOnSuccessListener(snapshot -> {
+            if (!snapshot.exists()) {
+                display_error("Access denied.\nUser not registered.", "Contact developer to get yourself registered");
+                showEnterAccessCodeDialog();
+                return;
             }
+            if (snapshot.get("Blocked", boolean.class)) {
+                display_error("Access denied by developer", "You have been temporarily denied access to this application." +
+                        "This could be due to abuse or misuse of this application." +
+                        "Contact developer for more information.");
+                showBlockedDialog();
+                return;
+            }
+            OkHttpClient client = new OkHttpClient.Builder() // Set connection timeout to 30 seconds
+                    .readTimeout(60, TimeUnit.SECONDS)     // Set write timeout to 60 seconds
+                    .build();
+
+            FormBody body = new FormBody.Builder()
+                    .add("game-url", game_url)
+                    .build();
+
+            Request request = new Request.Builder()
+                    .url("https://chessgr-api.up.railway.app/review-game")
+                    .post(body)
+                    .build();
+
+            client.newCall(request).enqueue(new Callback() {
+                @Override
+                public void onFailure(Call call, IOException e) {
+                    display_error("Failed to send your request", e.getMessage());
+                }
+
+                @Override
+                public void onResponse(Call call, Response response) throws IOException {
+                    if (response.body() != null)
+                        devlog = "Response code: " + response.code() + "\nResponse body: " + response.body().string();
+                    if (response.isSuccessful() || response.body().toString().contains("check if it works")) {
+                        runOnUiThread(() -> {
+                            String androidId1 = Settings.Secure.getString(MainActivity.this.getContentResolver(), Settings.Secure.ANDROID_ID);
+                            FirebaseUtils.getFirestore().collection("users").document(androidId1).get().addOnSuccessListener((s) -> {
+                                FirebaseUtils.getFirestore().collection("users").document(androidId1)
+                                        .update( "Last game reviewed on", LocalDateTime.now().format(DateTimeFormatter.ofPattern(" dd-MMM-yyyy 'at' hh:mm a")), "Games reviewed till now", ((Long) s.get("Games reviewed till now")) + 1);
+                            });
+                            pref.edit().putBoolean("isReviewing", false).apply();
+                            findViewById(R.id.urlInp).setEnabled(true);
+                            findViewById(R.id.reviewBtn).setEnabled(true);
+                            findViewById(R.id.pasteBtn).setEnabled(true);
+                            ((TextInputEditText) findViewById(R.id.urlInp)).setText("");
+                            findViewById(R.id.spinnerCont).setVisibility(View.GONE);
+                            ((ImageView) findViewById(R.id.statusIcon)).setImageResource(R.drawable.check_circle_icon);
+                            ((TextView) findViewById(R.id.statusTxt)).setTextColor(getColor(R.color.successGreen));
+                            ((TextView) findViewById(R.id.statusTxt)).setText("Game reviewed\nsuccessfully");
+                            findViewById(R.id.openInApp).setVisibility(View.VISIBLE);
+                            findViewById(R.id.statusCont).setVisibility(View.VISIBLE);
+                            if (pref.getBoolean("onSuccSnackDSA", false))
+                                Toast.makeText(getApplicationContext(), "Game reviewed successfully", Toast.LENGTH_LONG).show();
+                            if (pref.getBoolean("redirect", false)) {
+                                String redirect_url;
+                                String[] subdirs = game_url.substring(22).split("/");
+                                if(subdirs[0].equals("game")){
+                                    redirect_url = "https://www.chess.com/analysis/game/" + subdirs[1] + "/" + subdirs[2];
+                                }else{
+                                    redirect_url = "https://www.chess.com/analysis/game/" + subdirs[0] + "/" + subdirs[2];
+                                }
+                                startActivity(new Intent(Intent.ACTION_VIEW).setData(Uri.parse(redirect_url)));
+                            }
+                        });
+                        if (!pref.getBoolean("redirect", false)) {
+                            if (!pref.getBoolean("onSuccSnackDSA", false)) {
+                                Snackbar snackbar = Snackbar.make(findViewById(android.R.id.content), "Now open this game on chess.com's website or mobile app and click their light green colored game review button. This time they won't ask you to purchase a platinum or diamond subscription to review this game.", Snackbar.LENGTH_INDEFINITE);
+                                View snackbarView = snackbar.getView();
+                                TextView textView = snackbarView.findViewById(com.google.android.material.R.id.snackbar_text);
+                                textView.setMaxLines(10);
+                                textView.setEllipsize(null);
+                                textView.setSingleLine(false);
+                                snackbar.setAction("Don't show again", (e) -> {
+                                    pref.edit().putBoolean("onSuccSnackDSA", true).apply();
+                                });
+                                snackbar.show();
+                            }
+                        }
+                    } else {
+                        display_error("Server Error", devlog);
+                    }
+                }
+            });
         }).addOnFailureListener(e -> {
             display_error("Cannot verify authority", e.getMessage());
         });
