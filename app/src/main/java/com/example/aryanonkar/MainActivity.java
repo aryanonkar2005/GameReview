@@ -73,6 +73,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Random;
@@ -360,7 +361,7 @@ public class MainActivity extends AppCompatActivity {
                     if (snapshot.getValue() != null) {
                         HashMap<Integer, String> map = (HashMap<Integer, String>) snapshot.getValue();
                         code = String.valueOf(map.keySet().stream().findFirst().get());
-                        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MMM-yyyy hh:mm:ss a");
+                        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MMM-yyyy hh:mm:ss a", Locale.ENGLISH);
                         LocalDateTime givenDateTime = LocalDateTime.parse(map.get(map.keySet().iterator().next()).toString(), formatter);
                         LocalDateTime now = LocalDateTime.now();
                         LocalDateTime threeMinsAgo = now.minusMinutes(3);
@@ -501,7 +502,7 @@ public class MainActivity extends AppCompatActivity {
                             String androidId1 = Settings.Secure.getString(MainActivity.this.getContentResolver(), Settings.Secure.ANDROID_ID);
                             FirebaseUtils.getFirestore().collection("users").document(androidId1).get().addOnSuccessListener((s) -> {
                                 FirebaseUtils.getFirestore().collection("users").document(androidId1)
-                                        .update("Last game reviewed on", LocalDateTime.now().format(DateTimeFormatter.ofPattern(" dd-MMM-yyyy 'at' hh:mm a")), "Games reviewed till now", ((Long) s.get("Games reviewed till now")) + 1);
+                                        .update("Last game reviewed on", LocalDateTime.now().format(DateTimeFormatter.ofPattern(" dd-MMM-yyyy 'at' hh:mm a", Locale.ENGLISH)), "Games reviewed till now", ((Long) s.get("Games reviewed till now")) + 1);
                             });
                             pref.edit().putBoolean("isReviewing", false).apply();
                             findViewById(R.id.urlInp).setEnabled(true);
