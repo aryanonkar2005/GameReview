@@ -223,9 +223,9 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.openInApp).setOnClickListener((e) -> {
             String redirect_url;
             String[] subdirs = game_url.substring(22).split("/");
-            if(subdirs[0].equals("game")){
+            if (subdirs[0].equals("game")) {
                 redirect_url = "https://www.chess.com/analysis/game/" + subdirs[1] + "/" + subdirs[2];
-            }else{
+            } else {
                 redirect_url = "https://www.chess.com/analysis/game/" + subdirs[0] + "/" + subdirs[2];
             }
             startActivity(new Intent(Intent.ACTION_VIEW).setData(Uri.parse(redirect_url)));
@@ -340,28 +340,44 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot snapshot) {
                     String code = "null";
-                    if (snapshot.getValue() != null)
-                        code = String.valueOf(((HashMap<Integer, String>) snapshot.getValue()).keySet().stream().findFirst().get());
+                    boolean hasCodeExpired = false;
+                    if (snapshot.getValue() != null) {
+                        HashMap<Integer, String> map = (HashMap<Integer, String>) snapshot.getValue();
+                        code = String.valueOf(map.keySet().stream().findFirst().get());
+                        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MMM-yyyy hh:mm:ss a");
+                        LocalDateTime givenDateTime = LocalDateTime.parse(map.get(map.keySet().iterator().next()).toString(), formatter);
+                        LocalDateTime now = LocalDateTime.now();
+                        LocalDateTime threeMinsAgo = now.minusMinutes(3);
+                        hasCodeExpired = givenDateTime.isBefore(threeMinsAgo);
+                    }
                     if (inpEditText.getText().toString().contentEquals(code)) {
-                        Toast.makeText(MainActivity.this, "OTP was correct", Toast.LENGTH_LONG).show();
-                        dialog.dismiss();
-                        View unameDialogView = LayoutInflater.from(MainActivity.this).inflate(R.layout.username_input_dialog, null);
-                        TextInputEditText unameInpEditText = unameDialogView.findViewById(R.id.unameInp);
-                        AlertDialog unameDialog = new MaterialAlertDialogBuilder(MainActivity.this)
-                                .setTitle("Enter your full name")
-                                .setMessage("Must be less than 32 characters.")
-                                .setView(unameDialogView)
-                                .setNegativeButton("Exit", (d, e) -> System.exit(0))
-                                .setPositiveButton("Submit", (d, e) -> {
-                                    FirebaseUtils.getFirebaseDb().getReference("unused-access-code").removeValue();
-                                    String androidId = Settings.Secure.getString(MainActivity.this.getContentResolver(), Settings.Secure.ANDROID_ID);
-                                    FirebaseUtils.getFirestore().collection("users").document(androidId).set(new HashMap<String, Object>(Map.of(
-                                            "Username", unameInpEditText.getText().toString().trim(), "Blocked", false, "Device model", Build.MODEL,
-                                            "Last game reviewed on", ": No game reviewed till now", "Games reviewed till now", 0)));
-                                }).create();
-                        unameDialog.setCancelable(false);
-                        unameDialog.setCanceledOnTouchOutside(false);
-                        unameDialog.show();
+                        if (!hasCodeExpired) {
+                            Toast.makeText(MainActivity.this, "OTP was correct", Toast.LENGTH_LONG).show();
+                            dialog.dismiss();
+                            View unameDialogView = LayoutInflater.from(MainActivity.this).inflate(R.layout.username_input_dialog, null);
+                            TextInputEditText unameInpEditText = unameDialogView.findViewById(R.id.unameInp);
+                            AlertDialog unameDialog = new MaterialAlertDialogBuilder(MainActivity.this)
+                                    .setTitle("Enter your full name")
+                                    .setMessage("Must be less than 32 characters.")
+                                    .setView(unameDialogView)
+                                    .setNegativeButton("Exit", (d, e) -> System.exit(0))
+                                    .setPositiveButton("Submit", (d, e) -> {
+                                        FirebaseUtils.getFirebaseDb().getReference("unused-access-code").removeValue();
+                                        String androidId = Settings.Secure.getString(MainActivity.this.getContentResolver(), Settings.Secure.ANDROID_ID);
+                                        FirebaseUtils.getFirestore().collection("users").document(androidId).set(new HashMap<String, Object>(Map.of(
+                                                "Username", unameInpEditText.getText().toString().trim(), "Blocked", false, "Device model", Build.MODEL,
+                                                "Last game reviewed on", ": No game reviewed till now", "Games reviewed till now", 0)));
+                                    }).create();
+                            unameDialog.setCancelable(false);
+                            unameDialog.setCanceledOnTouchOutside(false);
+                            unameDialog.show();
+                        } else {
+                            dialog.setTitle("Enter access code");
+                            dialog.setMessage("To get access code contact Aryan Onkar.");
+                            inpLayout.setEnabled(true);
+                            inpLayout.setError("OTP has expired");
+                            inpCont.setPadding((int) (24 * scale), 0, (int) (24 * scale), 0);
+                        }
                     } else {
                         dialog.setTitle("Enter access code");
                         dialog.setMessage("To get access code contact Aryan Onkar.");
@@ -462,7 +478,7 @@ public class MainActivity extends AppCompatActivity {
                             String androidId1 = Settings.Secure.getString(MainActivity.this.getContentResolver(), Settings.Secure.ANDROID_ID);
                             FirebaseUtils.getFirestore().collection("users").document(androidId1).get().addOnSuccessListener((s) -> {
                                 FirebaseUtils.getFirestore().collection("users").document(androidId1)
-                                        .update( "Last game reviewed on", LocalDateTime.now().format(DateTimeFormatter.ofPattern(" dd-MMM-yyyy 'at' hh:mm a")), "Games reviewed till now", ((Long) s.get("Games reviewed till now")) + 1);
+                                        .update("Last game reviewed on", LocalDateTime.now().format(DateTimeFormatter.ofPattern(" dd-MMM-yyyy 'at' hh:mm a")), "Games reviewed till now", ((Long) s.get("Games reviewed till now")) + 1);
                             });
                             pref.edit().putBoolean("isReviewing", false).apply();
                             findViewById(R.id.urlInp).setEnabled(true);
@@ -480,9 +496,9 @@ public class MainActivity extends AppCompatActivity {
                             if (pref.getBoolean("redirect", false)) {
                                 String redirect_url;
                                 String[] subdirs = game_url.substring(22).split("/");
-                                if(subdirs[0].equals("game")){
+                                if (subdirs[0].equals("game")) {
                                     redirect_url = "https://www.chess.com/analysis/game/" + subdirs[1] + "/" + subdirs[2];
-                                }else{
+                                } else {
                                     redirect_url = "https://www.chess.com/analysis/game/" + subdirs[0] + "/" + subdirs[2];
                                 }
                                 startActivity(new Intent(Intent.ACTION_VIEW).setData(Uri.parse(redirect_url)));
