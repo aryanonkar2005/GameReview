@@ -399,7 +399,7 @@ public class MainActivity extends AppCompatActivity {
                             dialog.setTitle("Enter access code");
                             dialog.setMessage("To get access code contact Aryan Onkar.");
                             inpLayout.setEnabled(true);
-                            inpLayout.setError("OTP has expired");
+                            inpLayout.setError("This OTP has expired");
                             inpCont.setPadding((int) (24 * scale), 0, (int) (24 * scale), 0);
                         }
                     } else {
