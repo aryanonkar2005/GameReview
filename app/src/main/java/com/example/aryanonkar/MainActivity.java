@@ -372,12 +372,13 @@ public class MainActivity extends AppCompatActivity {
                             dialog.dismiss();
                             View unameDialogView = LayoutInflater.from(MainActivity.this).inflate(R.layout.username_input_dialog, null);
                             TextInputEditText unameInpEditText = unameDialogView.findViewById(R.id.unameInp);
-                            AlertDialog unameDialog = new MaterialAlertDialogBuilder(MainActivity.this)
-                                    .setTitle("Enter your full name")
+                            MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(MainActivity.this);
+                            builder.setTitle("Enter your full name")
                                     .setMessage("Must be less than 32 characters.")
                                     .setView(unameDialogView)
                                     .setNegativeButton("Exit", (d, e) -> System.exit(0))
-                                    .setPositiveButton("Submit", null).create();
+                                    .setPositiveButton("Submit", null);
+                            AlertDialog unameDialog = builder.create();
                             unameDialog.setCancelable(false);
                             unameDialog.setCanceledOnTouchOutside(false);
                             unameDialog.show();
