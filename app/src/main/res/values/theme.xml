@@ -1,0 +1,6 @@
+<!-- res/values/themes.xml -->
+<resources>
+    <style name="Base.Theme.AryanOnkar" parent="Theme.Material3.Light.NoActionBar">
+        <item name="alertDialogTheme">@style/ThemeOverlay.Material3.Dialog</item>
+    </style>
+</resources>
