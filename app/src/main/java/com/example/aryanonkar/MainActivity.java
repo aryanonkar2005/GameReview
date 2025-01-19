@@ -1,10 +1,13 @@
 package com.example.aryanonkar;
 
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.graphics.Rect;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -16,6 +19,7 @@ import android.os.Looper;
 import android.provider.Settings;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -29,9 +33,12 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
+import androidx.core.app.NotificationCompat;
+import androidx.core.content.FileProvider;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.preference.Preference;
 import androidx.preference.PreferenceManager;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.snackbar.Snackbar;
@@ -40,13 +47,22 @@ import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.ValueEventListener;
+import com.parse.Parse;
+import com.parse.ParseFile;
+import com.parse.ParseObject;
+import com.parse.ParseQuery;
+
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.FormBody;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
@@ -59,6 +75,8 @@ import java.util.regex.Pattern;
 
 public class MainActivity extends AppCompatActivity {
 
+    NotificationCompat.Builder builder;
+    NotificationManager manager;
     ClipboardManager clipboardManager;
     boolean blockedAccess = false;
     AlertDialog block_dialog;
@@ -119,6 +137,92 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    public void downloadAndInstallApk(Context context) {
+        manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+        NotificationChannel channel = new NotificationChannel("channelId", "Progress", NotificationManager.IMPORTANCE_LOW);
+        manager.createNotificationChannel(channel);
+
+        builder = new NotificationCompat.Builder(context, "channelId")
+                .setContentTitle("Downloading update...")
+                .setOngoing(true)
+                .setSmallIcon(R.drawable.download_icon)
+                .setProgress(100, 0, false);
+
+        manager.notify(1, builder.build());
+
+        ParseQuery<ParseObject> query = ParseQuery.getQuery("ApkStorage");
+        query.getInBackground("AewFF3bzXS", (object, e) -> {
+            if (e == null) {
+                ParseFile apkFile = object.getParseFile("APK");
+                if (apkFile != null) {
+                    OkHttpClient client = new OkHttpClient();
+                    Request request = new Request.Builder().url(apkFile.getUrl()).build();
+
+                    client.newCall(request).enqueue(new Callback() {
+                        @Override
+                        public void onFailure(Call call, IOException e) {
+                            Log.e("DownloadAndInstallUpdate()", "Download failed", e);
+                        }
+
+                        @Override
+                        public void onResponse(Call call, Response response) throws IOException {
+                            if (response.isSuccessful()) {
+                                long totalBytes = response.body().contentLength();
+                                InputStream inputStream = response.body().byteStream();
+                                File file = new File(getFilesDir(), "latest.apk");
+                                FileOutputStream fileOutputStream = new FileOutputStream(file);
+
+                                byte[] buffer = new byte[4096];
+                                long totalBytesRead = 0;
+                                int bytesRead;
+
+                                while ((bytesRead = inputStream.read(buffer)) != -1) {
+                                    totalBytesRead += bytesRead;
+                                    int progress = (int) ((totalBytesRead * 100) / totalBytes);
+                                    if(progress==100) {
+                                        manager.cancel(1);
+                                    }
+                                    builder.setProgress(100, progress, false);
+                                    manager.notify(1, builder.build());
+                                    fileOutputStream.write(buffer, 0, bytesRead);
+                                }
+
+                                fileOutputStream.flush();
+                                inputStream.close();
+                                fileOutputStream.close();
+                                Uri apkUri = FileProvider.getUriForFile(context, getPackageName() + ".provider", file);
+                                Intent intent = new Intent(Intent.ACTION_INSTALL_PACKAGE).setData(apkUri).setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                                startActivity(intent);
+                            }
+                        }
+                    });
+                } else {
+                    Log.e("DownloadAndInstallUpdate()", "No APK file found in the specified object.");
+                }
+            } else {
+                Log.e("DownloadAndInstallUpdate()", "Error fetching object: " + e.getMessage());
+            }
+        });
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if(!this.getPackageManager().canRequestPackageInstalls()){
+            new MaterialAlertDialogBuilder(this)
+                    .setTitle("Grant permission to install updates")
+                    .setMessage("This app wasn’t installed from the Play Store, so it needs permission to install updates from unknown sources. To grant this permission, tap the 'Settings' button below. This will take you to the 'Install Unknown Apps' page. Once there, turn on the switch next to 'Allow from this source'.")
+                    .setPositiveButton("Settings", (d,e)->{
+                        Intent intent = new Intent(android.provider.Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES);
+                        intent.setData(Uri.parse("package:" + this.getPackageName()));
+                        this.startActivity(intent);
+                    })
+                    .setNegativeButton("Exit", (d,e)->{
+                        System.exit(0);
+                    }).show();
+        }
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -130,9 +234,44 @@ public class MainActivity extends AppCompatActivity {
             return insets;
         });
 
+        Parse.initialize(new Parse.Configuration.Builder(this)
+                .applicationId("TwsrKboyD0TsSyyc2PRYp8ysZeGnLM0QlkgjxHyO")
+                .clientKey("0qTrM6NrWEW8pGHwLSyQgRPGXeuRMSA54Gg8qYoa")
+                .server("https://parseapi.back4app.com/")
+                .build()
+        );
+
         pref = PreferenceManager.getDefaultSharedPreferences(this);
         pref.edit().putBoolean("isReviewing", false).apply();
         pref.edit().putBoolean("onSuccSnackDSA", false).apply();
+
+        FirebaseUtils.getFirebaseDb().getReference("latest-version").addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if(snapshot.exists()) {
+                    long version;
+                    try {
+                        version = MainActivity.this.getPackageManager().getPackageInfo(MainActivity.this.getPackageName(), 0).getLongVersionCode();
+                    } catch (PackageManager.NameNotFoundException e) {
+                        throw new RuntimeException(e);
+                    }
+                    if (snapshot.getValue(Double.class) > version) {
+                        new MaterialAlertDialogBuilder(MainActivity.this)
+                                .setTitle("New version available")
+                                .setMessage("You are running an old version of ChessGR. Please update to the latest version.")
+                                .setPositiveButton("Update now", (dialog, which) -> {
+                                    downloadAndInstallApk(MainActivity.this);
+                                })
+                                .setNegativeButton("Remind me later", (dialog, which) -> dialog.dismiss()).show();
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
 
         if (pref.getString("theme", "system").equalsIgnoreCase("light"))
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
@@ -349,6 +488,7 @@ public class MainActivity extends AppCompatActivity {
                             dialog.dismiss();
                             View unameDialogView = LayoutInflater.from(MainActivity.this).inflate(R.layout.username_input_dialog, null);
                             TextInputEditText unameInpEditText = unameDialogView.findViewById(R.id.unameInp);
+                            TextInputLayout unameInpLayout = unameDialogView.findViewById(R.id.unameInpLayout);
                             MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(MainActivity.this);
                             builder.setTitle("Enter your full name")
                                     .setMessage("Must be less than 32 characters.")
@@ -360,6 +500,10 @@ public class MainActivity extends AppCompatActivity {
                             unameDialog.setCanceledOnTouchOutside(false);
                             unameDialog.show();
                             unameDialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
+                                if(unameInpEditText.getText().toString().trim().isEmpty()) {
+                                    unameInpLayout.setError("This field is required");
+                                    return;
+                                }
                                 if (!isInternetAvailable(getApplicationContext())) {
                                     Toast.makeText(getApplicationContext(), "No internet. Try again", Toast.LENGTH_SHORT).show();
                                     return;

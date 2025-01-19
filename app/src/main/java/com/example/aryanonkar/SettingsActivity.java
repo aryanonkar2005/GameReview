@@ -4,6 +4,7 @@ import android.app.UiModeManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Bundle;
@@ -59,6 +60,11 @@ public class SettingsActivity extends AppCompatActivity {
         @Override
         public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
             setPreferencesFromResource(R.xml.root_preferences, rootKey);
+            try {
+                findPreference("version").setSummary(String.valueOf(requireContext().getPackageManager().getPackageInfo(requireContext().getPackageName(), 0).getLongVersionCode()));
+            } catch (PackageManager.NameNotFoundException e) {
+                throw new RuntimeException(e);
+            }
             findPreference("dev").setOnPreferenceClickListener((preference) -> {
                 startActivity(new Intent(Intent.ACTION_VIEW).setData(Uri.parse("https://aryanonkar-portfolio.vercel.app/")));
                 return true;

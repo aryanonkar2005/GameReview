@@ -29,6 +29,7 @@ android {
 }
 
 dependencies {
+    implementation libs.parse
     implementation libs.okhttp
     implementation libs.appcompat
     implementation libs.material

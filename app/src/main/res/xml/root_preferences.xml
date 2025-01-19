@@ -1,4 +1,5 @@
-<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
 
     <PreferenceCategory app:title="General" app:iconSpaceReserved="false">
 
@@ -34,10 +35,11 @@
     <PreferenceCategory app:title="About" app:iconSpaceReserved="false">
 
         <Preference
+            android:id="@+id/version"
             app:key="version"
             app:iconSpaceReserved="false"
             app:title="Version"
-            app:summary="1.0"/>
+            app:summary="0.0"/>
 
         <Preference
             app:key="release"
