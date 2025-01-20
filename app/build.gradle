@@ -11,8 +11,6 @@ android {
         applicationId "com.example.aryanonkar"
         minSdk 29
         targetSdk 34
-        versionCode 1
-        versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -29,7 +27,6 @@ android {
 }
 
 dependencies {
-    implementation libs.parse
     implementation libs.okhttp
     implementation libs.appcompat
     implementation libs.material
@@ -40,6 +37,7 @@ dependencies {
     implementation libs.firebase.analytics
     implementation libs.firebase.firestore
     implementation libs.firebase.database
+    implementation libs.dropbox.android.sdk
     testImplementation libs.junit
     androidTestImplementation libs.ext.junit
     androidTestImplementation libs.espresso.core

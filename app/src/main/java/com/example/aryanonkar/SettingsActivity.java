@@ -8,9 +8,6 @@ import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Bundle;
-import android.util.Log;
-import android.widget.Toast;
-
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
@@ -20,10 +17,8 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.preference.ListPreference;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceManager;
-
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-import com.google.android.material.snackbar.Snackbar;
 
 public class SettingsActivity extends AppCompatActivity {
 
@@ -61,7 +56,7 @@ public class SettingsActivity extends AppCompatActivity {
         public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
             setPreferencesFromResource(R.xml.root_preferences, rootKey);
             try {
-                findPreference("version").setSummary(String.valueOf(requireContext().getPackageManager().getPackageInfo(requireContext().getPackageName(), 0).getLongVersionCode()));
+                findPreference("version").setSummary(requireContext().getPackageManager().getPackageInfo(requireContext().getPackageName(), 0).versionName);
             } catch (PackageManager.NameNotFoundException e) {
                 throw new RuntimeException(e);
             }
