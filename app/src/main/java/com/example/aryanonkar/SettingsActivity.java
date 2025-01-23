@@ -100,6 +100,7 @@ public class SettingsActivity extends AppCompatActivity {
                     Snackbar.make(getActivity().findViewById(android.R.id.content),"Check your internet connection and try again",Snackbar.LENGTH_SHORT).show();
                     return true;
                 }
+                Toast.makeText(requireContext(), "Checking for updates...", Toast.LENGTH_SHORT).show();
                 FirebaseUtils.getFirebaseDb().getReference("latest-version").addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot snapshot) {
@@ -113,7 +114,7 @@ public class SettingsActivity extends AppCompatActivity {
                         if(apkFile.exists() || snapshot.getValue(Integer.class) > version){
                             UpdateApp.CheckForUpdates(requireContext(), getActivity());
                         }else{
-                            Toast.makeText(requireContext(), "No update available", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(requireContext(), "No update available", Toast.LENGTH_LONG).show();
                         }
                     }
 
