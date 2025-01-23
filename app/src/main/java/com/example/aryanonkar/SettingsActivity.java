@@ -114,6 +114,7 @@ public class SettingsActivity extends AppCompatActivity {
                         if(apkFile.exists() || snapshot.getValue(Integer.class) > version){
                             UpdateApp.CheckForUpdates(requireContext(), getActivity());
                         }else{
+                            pref.edit().putString("update", LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MMM-yyyy 'at' hh:mm a", Locale.ENGLISH)));
                             Toast.makeText(requireContext(), "No update available", Toast.LENGTH_LONG).show();
                         }
                     }
