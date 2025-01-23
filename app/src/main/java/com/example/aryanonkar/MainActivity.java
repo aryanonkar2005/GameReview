@@ -1,12 +1,12 @@
 package com.example.aryanonkar;
 
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
+import android.Manifest;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Rect;
 import android.net.ConnectivityManager;
@@ -19,7 +19,6 @@ import android.os.Looper;
 import android.provider.Settings;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -34,16 +33,13 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
-import androidx.core.app.NotificationCompat;
+import androidx.core.app.ActivityCompat;
 import androidx.core.content.FileProvider;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
-import androidx.preference.Preference;
 import androidx.preference.PreferenceManager;
 
-import com.dropbox.core.DbxRequestConfig;
-import com.dropbox.core.v2.DbxClientV2;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textfield.TextInputEditText;
@@ -74,7 +70,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class MainActivity extends AppCompatActivity {
-
     long version;
     ClipboardManager clipboardManager;
     boolean blockedAccess = false;
@@ -169,11 +164,19 @@ public class MainActivity extends AppCompatActivity {
             return insets;
         });
 
-        try {
-            version = MainActivity.this.getPackageManager().getPackageInfo(MainActivity.this.getPackageName(), 0).getLongVersionCode();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        FirebaseUtils.getFirebaseDb().getReference("latest-version").addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                UpdateApp.CheckForUpdates(MainActivity.this, MainActivity.this);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {}
+        });
+
+        ActivityCompat.requestPermissions(this,
+                new String[]{Manifest.permission.POST_NOTIFICATIONS},
+                100);
 
         pref = PreferenceManager.getDefaultSharedPreferences(this);
         pref.edit().putBoolean("isReviewing", false).apply();
@@ -184,42 +187,6 @@ public class MainActivity extends AppCompatActivity {
             if (apkFile.exists()) apkFile.delete();
             pref.edit().putLong("version-code", version).apply();
         }
-        if (apkFile.exists()) {
-            if (this.getPackageManager().canRequestPackageInstalls()) {
-                new MaterialAlertDialogBuilder(this)
-                        .setTitle("Install update")
-                        .setMessage("Latest update has been downloaded successfully. Would you like to install it now?")
-                        .setPositiveButton("Install now", (d, e) -> {
-                            Uri apkUri = FileProvider.getUriForFile(this, getPackageName() + ".provider", apkFile);
-                            Intent intent = new Intent(Intent.ACTION_INSTALL_PACKAGE).setData(apkUri).setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                            startActivity(intent);
-                        })
-                        .setNegativeButton("Remind me later", (d, e) -> d.dismiss())
-                        .show();
-            }
-        }
-
-        FirebaseUtils.getFirebaseDb().getReference("latest-version").addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                if (snapshot.exists()) {
-                    if (snapshot.getValue(Integer.class) > version && getPackageManager().canRequestPackageInstalls() && !apkFile.exists()) {
-                        new MaterialAlertDialogBuilder(MainActivity.this)
-                                .setTitle("New version available")
-                                .setMessage("You are running an old version of ChessGR. Please update to the latest version.")
-                                .setPositiveButton("Update now", (dialog, which) -> {
-                                    Intent intent = new Intent(MainActivity.this, UpdateService.class);
-                                    startService(intent);
-                                })
-                                .setNegativeButton("Remind me later", (dialog, which) -> dialog.dismiss()).show();
-                    }
-                }
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-            }
-        });
 
         if (pref.getString("theme", "system").equalsIgnoreCase("light"))
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);

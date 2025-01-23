@@ -35,7 +35,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="32dp"
-                android:text="This application enables users to review games on Chess.com without requiring a platinum or diamond subscription. Chess.com does not ask for a platinum or diamond subscription to review games that have already been reviewed by this app. It does so by exploiting a loophole in chess.com's mobile app and website that allows a person without a platinum or diamond subscription to review a game if the game has formerly been reviewed by someone with a platinum or diamond subscription."
+                android:text="This application enables users to review games on Chess.com without buying its platinum or diamond subscription. Chess.com does not ask for a platinum or diamond subscription to review games that have already been reviewed by this app. This app works by exploiting a loophole in chess.com's mobile app and website that allows a person without a platinum or diamond subscription to review a game if the game has formerly been reviewed by someone with a platinum or diamond subscription."
                 android:textAppearance="@style/TextAppearance.Material3.BodyLarge"
                 android:textColor="@color/material_on_background_emphasis_high_type" />
 

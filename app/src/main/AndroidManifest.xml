@@ -17,6 +17,9 @@
         android:supportsRtl="true"
         android:theme="@style/Base.Theme.AryanOnkar"
         tools:targetApi="31">
+        <meta-data
+            android:name="released-on"
+            android:value="23-Jan-2025" />
         <service
             android:name=".UpdateService"
             android:foregroundServiceType="dataSync" />

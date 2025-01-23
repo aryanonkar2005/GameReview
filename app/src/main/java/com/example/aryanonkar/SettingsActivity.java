@@ -8,7 +8,10 @@ import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
+
 import androidx.activity.EdgeToEdge;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.graphics.Insets;
@@ -19,6 +22,11 @@ import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceManager;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.snackbar.Snackbar;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 
 public class SettingsActivity extends AppCompatActivity {
 
@@ -52,11 +60,28 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     public static class SettingsFragment extends PreferenceFragmentCompat {
+
+        SharedPreferences.OnSharedPreferenceChangeListener listener;
+        SharedPreferences pref;
+
+        @Override
+        public void onDestroy() {
+            super.onDestroy();
+            pref.unregisterOnSharedPreferenceChangeListener(listener);
+        }
+
         @Override
         public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
             setPreferencesFromResource(R.xml.root_preferences, rootKey);
+            pref = PreferenceManager.getDefaultSharedPreferences(requireContext());
+            listener = (sharedPreferences, key) -> {
+                if(key.equals("update")) findPreference("update").setSummary("Last checked on " + sharedPreferences.getString("update", "N/A"));
+            };
+            pref.registerOnSharedPreferenceChangeListener(listener);
             try {
-                findPreference("version").setSummary(requireContext().getPackageManager().getPackageInfo(requireContext().getPackageName(), 0).versionName);
+                findPreference("update").setSummary("Last checked on " + pref.getString("update", "N/A"));
+                findPreference("release").setSummary(requireContext().getPackageManager().getApplicationInfo(requireContext().getPackageName(), PackageManager.GET_META_DATA).metaData.getString("released-on"));
+                findPreference("version").setSummary(requireContext().getPackageManager().getPackageInfo(requireContext().getPackageName(), 0).getLongVersionCode() + ".0");
             } catch (PackageManager.NameNotFoundException e) {
                 throw new RuntimeException(e);
             }
@@ -64,9 +89,16 @@ public class SettingsActivity extends AppCompatActivity {
                 startActivity(new Intent(Intent.ACTION_VIEW).setData(Uri.parse("https://aryanonkar-portfolio.vercel.app/")));
                 return true;
             });
+            findPreference("update").setOnPreferenceClickListener((preference) -> {
+                if(!MainActivity.isInternetAvailable(requireContext())){
+                    Snackbar.make(getActivity().findViewById(android.R.id.content),"Check your internet connection and try again",Snackbar.LENGTH_SHORT).show();
+                    return true;
+                }
+                UpdateApp.CheckForUpdates(requireContext(), getActivity());
+                return true;
+            });
             findPreference("theme").setOnPreferenceChangeListener(((preference, newValue) -> {
                 if(!((ListPreference)findPreference("theme")).getValue().equalsIgnoreCase(newValue.toString())) {
-                    SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(requireContext());
                     boolean isAppDark = ((requireContext().getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES);
                     boolean isSystemDark = ((UiModeManager) requireContext().getSystemService(Context.UI_MODE_SERVICE)).getNightMode() == UiModeManager.MODE_NIGHT_YES;
                     boolean isNewThemeDiff;

@@ -37,7 +37,6 @@ dependencies {
     implementation libs.firebase.analytics
     implementation libs.firebase.firestore
     implementation libs.firebase.database
-    implementation libs.dropbox.android.sdk
     testImplementation libs.junit
     androidTestImplementation libs.ext.junit
     androidTestImplementation libs.espresso.core

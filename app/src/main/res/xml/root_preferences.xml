@@ -52,6 +52,12 @@
             app:iconSpaceReserved="false"
             app:title="Developer"
             app:summary="Aryan Onkar"/>
+
+        <Preference
+            app:key="update"
+            app:iconSpaceReserved="false"
+            app:title="Check for updates"
+            app:summary="Last checked on 11-Jan-2025 at 12:05 PM" />
     </PreferenceCategory>
 
 </PreferenceScreen>
