@@ -173,6 +173,12 @@ public class MainActivity extends AppCompatActivity {
         pref.edit().putBoolean("isReviewing", false).apply();
         pref.edit().putBoolean("onSuccSnackDSA", false).apply();
 
+        File apkFile = new File(getFilesDir(), "latest.apk");
+        if (pref.getLong("version-code", 0) < version) {
+            if (apkFile.exists()) apkFile.delete();
+            pref.edit().putLong("version-code", version).apply();
+        }
+
         if(LocalDate.parse(pref.getString("remind-later-clicked-on", "01-Jan-2000"), DateTimeFormatter.ofPattern("dd-MMM-yyyy", Locale.ENGLISH)).isBefore(LocalDate.now())) {
             FirebaseUtils.getFirebaseDb().getReference("latest-version").addValueEventListener(new ValueEventListener() {
                 @Override
@@ -184,12 +190,6 @@ public class MainActivity extends AppCompatActivity {
                 public void onCancelled(@NonNull DatabaseError error) {
                 }
             });
-        }
-
-        File apkFile = new File(getFilesDir(), "latest.apk");
-        if (pref.getLong("version-code", 0) < version) {
-            if (apkFile.exists()) apkFile.delete();
-            pref.edit().putLong("version-code", version).apply();
         }
 
         if (pref.getString("theme", "system").equalsIgnoreCase("light"))

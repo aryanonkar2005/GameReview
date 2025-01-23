@@ -9,8 +9,10 @@ import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
@@ -23,7 +25,11 @@ import androidx.preference.PreferenceManager;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.snackbar.Snackbar;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.ValueEventListener;
 
+import java.io.File;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
@@ -94,7 +100,28 @@ public class SettingsActivity extends AppCompatActivity {
                     Snackbar.make(getActivity().findViewById(android.R.id.content),"Check your internet connection and try again",Snackbar.LENGTH_SHORT).show();
                     return true;
                 }
-                UpdateApp.CheckForUpdates(requireContext(), getActivity());
+                FirebaseUtils.getFirebaseDb().getReference("latest-version").addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        File apkFile = new File(requireContext().getFilesDir(), "latest.apk");
+                        long version;
+                        try {
+                            version = requireContext().getPackageManager().getPackageInfo(requireContext().getPackageName(), 0).getLongVersionCode();
+                        } catch (Exception e) {
+                            throw new RuntimeException(e);
+                        }
+                        if(apkFile.exists() || snapshot.getValue(Integer.class) > version){
+                            UpdateApp.CheckForUpdates(requireContext(), getActivity());
+                        }else{
+                            Toast.makeText(requireContext(), "No update available", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+
+                    }
+                });
                 return true;
             });
             findPreference("theme").setOnPreferenceChangeListener(((preference, newValue) -> {
