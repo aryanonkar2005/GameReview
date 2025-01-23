@@ -59,6 +59,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
@@ -164,16 +165,6 @@ public class MainActivity extends AppCompatActivity {
             return insets;
         });
 
-        FirebaseUtils.getFirebaseDb().getReference("latest-version").addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                UpdateApp.CheckForUpdates(MainActivity.this, MainActivity.this);
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {}
-        });
-
         ActivityCompat.requestPermissions(this,
                 new String[]{Manifest.permission.POST_NOTIFICATIONS},
                 100);
@@ -181,6 +172,19 @@ public class MainActivity extends AppCompatActivity {
         pref = PreferenceManager.getDefaultSharedPreferences(this);
         pref.edit().putBoolean("isReviewing", false).apply();
         pref.edit().putBoolean("onSuccSnackDSA", false).apply();
+
+        if(LocalDate.parse(pref.getString("remind-later-clicked-on", "01-Jan-2000"), DateTimeFormatter.ofPattern("dd-MMM-yyyy", Locale.ENGLISH)).isBefore(LocalDate.now())) {
+            FirebaseUtils.getFirebaseDb().getReference("latest-version").addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    UpdateApp.CheckForUpdates(MainActivity.this, MainActivity.this);
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
+                }
+            });
+        }
 
         File apkFile = new File(getFilesDir(), "latest.apk");
         if (pref.getLong("version-code", 0) < version) {

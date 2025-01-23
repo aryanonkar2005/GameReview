@@ -58,7 +58,10 @@ public class UpdateApp {
                                         Intent intent = new Intent(Intent.ACTION_INSTALL_PACKAGE).setData(apkUri).setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                                         context.startActivity(intent);
                                     })
-                                    .setNeutralButton("Remind me later", (d, e) -> d.dismiss());
+                                    .setNeutralButton("Remind me later", (d, e) -> {
+                                        pref.edit().putString("remind-later-clicked-on", LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MMM-yyyy", Locale.ENGLISH))).apply();
+                                        d.dismiss();
+                                    });
                             AlertDialog dialog = builder.create();
                             if(dialogToShow != null) dialogToShow.dismiss();
                             dialogToShow = dialog;
@@ -82,7 +85,10 @@ public class UpdateApp {
                                             Intent intent = new Intent(Intent.ACTION_INSTALL_PACKAGE).setData(apkUri).setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                                             context.startActivity(intent);
                                         })
-                                        .setNegativeButton("Remind me later", (d, e) -> d.dismiss());
+                                        .setNegativeButton("Remind me later", (d, e) -> {
+                                            pref.edit().putString("remind-later-clicked-on", LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MMM-yyyy", Locale.ENGLISH))).apply();
+                                            d.dismiss();
+                                        });
                                 AlertDialog dialog = builder.create();
                                 if(dialogToShow != null) dialogToShow.dismiss();
                                 dialogToShow = dialog;
@@ -108,7 +114,10 @@ public class UpdateApp {
                                     .setTitle("Update available")
                                     .setMessage("You are running an old version of ChessGR. Please update to the latest version.")
                                     .setPositiveButton("Update now", null)
-                                    .setNegativeButton("Remind me later", (dialog, which) -> dialog.dismiss());
+                                    .setNegativeButton("Remind me later", (dialog, which) -> {
+                                        pref.edit().putString("remind-later-clicked-on", LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MMM-yyyy", Locale.ENGLISH))).apply();
+                                        dialog.dismiss();
+                                    });
                             AlertDialog dialog = builder.create();
                             if(dialogToShow != null) dialogToShow.dismiss();
                             dialogToShow = dialog;
