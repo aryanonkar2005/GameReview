@@ -6,8 +6,6 @@ import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
 import android.graphics.Rect;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -56,9 +54,7 @@ import okhttp3.Request;
 import okhttp3.Response;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -71,6 +67,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class MainActivity extends AppCompatActivity {
+
+    AlertDialog grantInstallPermissionDialog;
     long version;
     ClipboardManager clipboardManager;
     boolean blockedAccess = false;
@@ -150,7 +148,15 @@ public class MainActivity extends AppCompatActivity {
             AlertDialog dialog = builder.create();
             dialog.setCancelable(false);
             dialog.setCanceledOnTouchOutside(false);
-            dialog.show();
+            if(grantInstallPermissionDialog != null) {
+                if (!grantInstallPermissionDialog.isShowing()) {
+                    grantInstallPermissionDialog = dialog;
+                    grantInstallPermissionDialog.show();
+                }
+            }else{
+                grantInstallPermissionDialog = dialog;
+                grantInstallPermissionDialog.show();
+            }
         }
     }
 
@@ -179,7 +185,7 @@ public class MainActivity extends AppCompatActivity {
             pref.edit().putLong("version-code", version).apply();
         }
 
-        if(LocalDate.parse(pref.getString("remind-later-clicked-on", "01-Jan-2000"), DateTimeFormatter.ofPattern("dd-MMM-yyyy", Locale.ENGLISH)).isBefore(LocalDate.now())) {
+        if (LocalDate.parse(pref.getString("remind-later-clicked-on", "01-Jan-2000"), DateTimeFormatter.ofPattern("dd-MMM-yyyy", Locale.ENGLISH)).isBefore(LocalDate.now())) {
             FirebaseUtils.getFirebaseDb().getReference("latest-version").addValueEventListener(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot snapshot) {
@@ -429,8 +435,17 @@ public class MainActivity extends AppCompatActivity {
                                 }
                                 FirebaseUtils.getFirebaseDb().getReference("unused-access-code").removeValue();
                                 String androidId = Settings.Secure.getString(MainActivity.this.getContentResolver(), Settings.Secure.ANDROID_ID);
+                                String[] words = unameInpEditText.getText().toString().trim().split("\\s+");
+                                StringBuilder capitalizedUname = new StringBuilder();
+                                for (String word : words) {
+                                    if (!word.isEmpty()) {
+                                        capitalizedUname.append(Character.toUpperCase(word.charAt(0)))
+                                                .append(word.substring(1).toLowerCase())
+                                                .append(" ");
+                                    }
+                                }
                                 FirebaseUtils.getFirestore().collection("users").document(androidId).set(new HashMap<String, Object>(Map.of(
-                                        "Username", unameInpEditText.getText().toString().trim(), "Blocked", false, "Device model", Build.MODEL,
+                                        "Username", capitalizedUname.toString().trim(), "Blocked", false, "Device model", Build.MODEL,
                                         "Last game reviewed on", ": No game reviewed till now", "Games reviewed till now", 0)));
                                 unameDialog.dismiss();
                             });
