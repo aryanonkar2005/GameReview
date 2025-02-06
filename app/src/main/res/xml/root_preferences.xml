@@ -7,8 +7,8 @@
             app:key="autopaste"
             app:defaultValue="true"
             app:iconSpaceReserved="false"
-            app:title="Auto-paste on startup"
-            app:summary="Automatically paste last copied text from clipboard on app launch"/>
+            app:title="Auto-paste game URL"
+            app:summary="Automatically paste last copied text from clipboard if it's a game URL"/>
 
         <SwitchPreferenceCompat
             app:key="confirm"

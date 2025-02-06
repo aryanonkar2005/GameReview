@@ -17,6 +17,7 @@ import android.os.Looper;
 import android.provider.Settings;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -67,7 +68,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class MainActivity extends AppCompatActivity {
-
     AlertDialog grantInstallPermissionDialog;
     long version;
     ClipboardManager clipboardManager;
@@ -87,12 +87,31 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void updatePasteBtn() {
+        if (pref.getBoolean("autopaste", false)) {
+            if (clipboardManager.hasPrimaryClip() && clipboardManager.getPrimaryClipDescription().hasMimeType("text/plain")) {
+                ClipData clipData = clipboardManager.getPrimaryClip();
+                if (clipData != null && clipData.getItemCount() > 0) {
+                    String clipboardText = clipData.getItemAt(0).getText().toString().trim();
+                    if (!clipboardText.isEmpty()) {
+                        Pattern pattern = Pattern.compile("https://www\\.chess\\.com/[a-z0-9/]+\\S");
+                        Matcher matcher = pattern.matcher(clipboardText);
+                        String game_url = null;
+                        if (matcher.find()) game_url = matcher.group();
+                        if (game_url != null) {
+                            if(!game_url.equals(((TextInputEditText) findViewById(R.id.urlInp)).getText().toString().trim())) {
+                                ((TextInputEditText) findViewById(R.id.urlInp)).setText(clipboardText);
+                                Toast.makeText(this, "Game URL pasted from clipboard", Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                    }
+                }
+            }
+        }
         if (clipboardManager.hasPrimaryClip() && clipboardManager.getPrimaryClipDescription().hasMimeType("text/plain")) {
             ClipData clipData = clipboardManager.getPrimaryClip();
             if (clipData != null && clipData.getItemCount() > 0) {
                 String clipboardText = clipData.getItemAt(0).getText().toString().trim();
-                if (!clipboardText.isEmpty())
-                    enablePasteBtn();
+                if (!clipboardText.isEmpty()) enablePasteBtn();
                 else disablePasteBtn();
             } else disablePasteBtn();
         } else disablePasteBtn();
@@ -130,30 +149,27 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+
     @Override
     protected void onResume() {
         super.onResume();
         if (!this.getPackageManager().canRequestPackageInstalls()) {
-            MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(this)
-                    .setTitle("Grant permission to install updates")
-                    .setMessage("This app wasn’t installed from the Play Store, so it needs permission to install updates from unknown sources. To grant this permission, tap the 'Settings' button below. This will take you to the 'Install Unknown Apps' page. Once there, turn on the switch next to 'Allow from this source'.")
-                    .setPositiveButton("Settings", (d, e) -> {
-                        Intent intent = new Intent(android.provider.Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES);
-                        intent.setData(Uri.parse("package:" + this.getPackageName()));
-                        this.startActivity(intent);
-                    })
-                    .setNegativeButton("Exit", (d, e) -> {
-                        System.exit(0);
-                    });
+            MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(this).setTitle("Grant permission to install updates").setMessage("This app wasn’t installed from the Play Store, so it needs permission to install updates from unknown sources. To grant this permission, tap the 'Settings' button below. This will take you to the 'Install Unknown Apps' page. Once there, turn on the switch next to 'Allow from this source'.").setPositiveButton("Settings", (d, e) -> {
+                Intent intent = new Intent(android.provider.Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES);
+                intent.setData(Uri.parse("package:" + this.getPackageName()));
+                this.startActivity(intent);
+            }).setNegativeButton("Exit", (d, e) -> {
+                System.exit(0);
+            });
             AlertDialog dialog = builder.create();
             dialog.setCancelable(false);
             dialog.setCanceledOnTouchOutside(false);
-            if(grantInstallPermissionDialog != null) {
+            if (grantInstallPermissionDialog != null) {
                 if (!grantInstallPermissionDialog.isShowing()) {
                     grantInstallPermissionDialog = dialog;
                     grantInstallPermissionDialog.show();
                 }
-            }else{
+            } else {
                 grantInstallPermissionDialog = dialog;
                 grantInstallPermissionDialog.show();
             }
@@ -171,9 +187,7 @@ public class MainActivity extends AppCompatActivity {
             return insets;
         });
 
-        ActivityCompat.requestPermissions(this,
-                new String[]{Manifest.permission.POST_NOTIFICATIONS},
-                100);
+        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.POST_NOTIFICATIONS}, 100);
 
         pref = PreferenceManager.getDefaultSharedPreferences(this);
         pref.edit().putBoolean("isReviewing", false).apply();
@@ -228,7 +242,7 @@ public class MainActivity extends AppCompatActivity {
             });
             clipboardManager = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
             updatePasteBtn();
-            ClipboardManager.OnPrimaryClipChangedListener clipboardListener = this::updatePasteBtn;
+            ClipboardManager.OnPrimaryClipChangedListener clipboardListener = ()-> updatePasteBtn();
             clipboardManager.addPrimaryClipChangedListener(clipboardListener);
             findViewById(R.id.pasteBtn).setOnClickListener((e) -> {
                 if (clipboardManager.hasPrimaryClip() && clipboardManager.getPrimaryClipDescription().hasMimeType("text/plain")) {
@@ -243,24 +257,6 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
             });
-            if (pref.getBoolean("autopaste", false)) {
-                if (clipboardManager.hasPrimaryClip() && clipboardManager.getPrimaryClipDescription().hasMimeType("text/plain")) {
-                    ClipData clipData = clipboardManager.getPrimaryClip();
-                    if (clipData != null && clipData.getItemCount() > 0) {
-                        String clipboardText = clipData.getItemAt(0).getText().toString().trim();
-                        if (!clipboardText.isEmpty()) {
-                            Pattern pattern = Pattern.compile("https://www\\.chess\\.com/[a-z0-9/]+\\S");
-                            Matcher matcher = pattern.matcher(clipboardText);
-                            String game_url = null;
-                            if (matcher.find()) game_url = matcher.group();
-                            if (game_url != null) {
-                                ((TextInputEditText) findViewById(R.id.urlInp)).setText(clipboardText);
-                                Toast.makeText(this, "Game URL pasted from clipboard", Toast.LENGTH_SHORT).show();
-                            }
-                        }
-                    }
-                }
-            }
         }, 1);
 
         findViewById(R.id.openInApp).setOnClickListener((e) -> {
@@ -290,11 +286,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         findViewById(R.id.statusCont).setOnLongClickListener((e) -> {
-            new MaterialAlertDialogBuilder(this)
-                    .setTitle("Developer Logs")
-                    .setMessage(devlog)
-                    .setPositiveButton("OK", (dialog, which) -> dialog.dismiss())
-                    .show();
+            new MaterialAlertDialogBuilder(this).setTitle("Developer Logs").setMessage(devlog).setPositiveButton("OK", (dialog, which) -> dialog.dismiss()).show();
             return false;
         });
 
@@ -318,28 +310,21 @@ public class MainActivity extends AppCompatActivity {
             }
 
             if (pref.getBoolean("confirm", false)) {
-                new MaterialAlertDialogBuilder(this)
-                        .setTitle("Are you sure?")
-                        .setMessage("Are you sure you want to review this game? This is just to make sure that you haven't hit the review game button by mistake.")
-                        .setPositiveButton("Yes", (d, w) -> review_game())
-                        .setNegativeButton("No", (d, w) -> d.dismiss())
-                        .show();
+                new MaterialAlertDialogBuilder(this).setTitle("Are you sure?").setMessage("Are you sure you want to review this game? This is just to make sure that you haven't hit the review game button by mistake.").setPositiveButton("Yes", (d, w) -> review_game()).setNegativeButton("No", (d, w) -> d.dismiss()).show();
             } else review_game();
         });
-        FirebaseUtils.getFirestore().collection("users")
-                .document(Settings.Secure.getString(this.getContentResolver(), Settings.Secure.ANDROID_ID))
-                .addSnapshotListener((snapshot, error) -> {
-                    if (block_dialog != null && block_dialog.isShowing()) {
-                        block_dialog.dismiss();
-                        block_dialog = null;
-                    }
-                    if (!snapshot.exists()) {
-                        showEnterAccessCodeDialog();
-                    } else if (snapshot.get("Blocked", boolean.class)) {
-                        showBlockedDialog();
-                        blockedAccess = true;
-                    }
-                });
+        FirebaseUtils.getFirestore().collection("users").document(Settings.Secure.getString(this.getContentResolver(), Settings.Secure.ANDROID_ID)).addSnapshotListener((snapshot, error) -> {
+            if (block_dialog != null && block_dialog.isShowing()) {
+                block_dialog.dismiss();
+                block_dialog = null;
+            }
+            if (!snapshot.exists()) {
+                showEnterAccessCodeDialog();
+            } else if (snapshot.get("Blocked", boolean.class)) {
+                showBlockedDialog();
+                blockedAccess = true;
+            }
+        });
     }
 
     public static boolean isInternetAvailable(Context context) {
@@ -374,11 +359,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(this);
-        builder.setTitle("Enter access code")
-                .setView(dialogView)
-                .setMessage("To get access code contact Aryan Onkar.")
-                .setPositiveButton("Submit", null)
-                .setNegativeButton("Exit", (dialog, which) -> System.exit(0));
+        builder.setTitle("Enter access code").setView(dialogView).setMessage("To get access code contact Aryan Onkar.").setPositiveButton("Submit", null).setNegativeButton("Exit", (dialog, which) -> System.exit(0));
         AlertDialog dialog = builder.create();
         dialog.setCanceledOnTouchOutside(false);
         dialog.setCancelable(false);
@@ -415,11 +396,7 @@ public class MainActivity extends AppCompatActivity {
                             TextInputEditText unameInpEditText = unameDialogView.findViewById(R.id.unameInp);
                             TextInputLayout unameInpLayout = unameDialogView.findViewById(R.id.unameInpLayout);
                             MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(MainActivity.this);
-                            builder.setTitle("Enter your full name")
-                                    .setMessage("Must be less than 32 characters.")
-                                    .setView(unameDialogView)
-                                    .setNegativeButton("Exit", (d, e) -> System.exit(0))
-                                    .setPositiveButton("Submit", null);
+                            builder.setTitle("Enter your full name").setMessage("Must be less than 32 characters.").setView(unameDialogView).setNegativeButton("Exit", (d, e) -> System.exit(0)).setPositiveButton("Submit", null);
                             AlertDialog unameDialog = builder.create();
                             unameDialog.setCancelable(false);
                             unameDialog.setCanceledOnTouchOutside(false);
@@ -439,14 +416,10 @@ public class MainActivity extends AppCompatActivity {
                                 StringBuilder capitalizedUname = new StringBuilder();
                                 for (String word : words) {
                                     if (!word.isEmpty()) {
-                                        capitalizedUname.append(Character.toUpperCase(word.charAt(0)))
-                                                .append(word.substring(1).toLowerCase())
-                                                .append(" ");
+                                        capitalizedUname.append(Character.toUpperCase(word.charAt(0))).append(word.substring(1).toLowerCase()).append(" ");
                                     }
                                 }
-                                FirebaseUtils.getFirestore().collection("users").document(androidId).set(new HashMap<String, Object>(Map.of(
-                                        "Username", capitalizedUname.toString().trim(), "Blocked", false, "Device model", Build.MODEL,
-                                        "Last game reviewed on", ": No game reviewed till now", "Games reviewed till now", 0)));
+                                FirebaseUtils.getFirestore().collection("users").document(androidId).set(new HashMap<String, Object>(Map.of("Username", capitalizedUname.toString().trim(), "Blocked", false, "Device model", Build.MODEL, "Last game reviewed on", ": No game reviewed till now", "Games reviewed till now", 0)));
                                 unameDialog.dismiss();
                             });
                         } else {
@@ -474,13 +447,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void showBlockedDialog() {
-        block_dialog = new MaterialAlertDialogBuilder(MainActivity.this)
-                .setTitle("Access denied")
-                .setCancelable(false)
-                .setMessage("You have been denied access to this application." +
-                        " This could be due to abuse or misuse of this application." +
-                        " Contact developer for more information.")
-                .setPositiveButton("Exit", (d, e) -> System.exit(0)).create();
+        block_dialog = new MaterialAlertDialogBuilder(MainActivity.this).setTitle("Access denied").setCancelable(false).setMessage("You have been denied access to this application." + " This could be due to abuse or misuse of this application." + " Contact developer for more information.").setPositiveButton("Exit", (d, e) -> System.exit(0)).create();
         block_dialog.setCanceledOnTouchOutside(false);
         block_dialog.show();
     }
@@ -522,9 +489,7 @@ public class MainActivity extends AppCompatActivity {
                 return;
             }
             if (snapshot.get("Blocked", boolean.class)) {
-                display_error("Access denied by developer", "You have been temporarily denied access to this application." +
-                        "This could be due to abuse or misuse of this application." +
-                        "Contact developer for more information.");
+                display_error("Access denied by developer", "You have been temporarily denied access to this application." + "This could be due to abuse or misuse of this application." + "Contact developer for more information.");
                 showBlockedDialog();
                 return;
             }
@@ -532,14 +497,9 @@ public class MainActivity extends AppCompatActivity {
                     .readTimeout(60, TimeUnit.SECONDS)     // Set write timeout to 60 seconds
                     .build();
 
-            FormBody body = new FormBody.Builder()
-                    .add("game-url", game_url)
-                    .build();
+            FormBody body = new FormBody.Builder().add("game-url", game_url).build();
 
-            Request request = new Request.Builder()
-                    .url("https://chessgr-api.up.railway.app/review-game")
-                    .post(body)
-                    .build();
+            Request request = new Request.Builder().url("https://chessgr-api.up.railway.app/review-game").post(body).build();
 
             client.newCall(request).enqueue(new Callback() {
                 @Override
@@ -555,8 +515,7 @@ public class MainActivity extends AppCompatActivity {
                         runOnUiThread(() -> {
                             String androidId1 = Settings.Secure.getString(MainActivity.this.getContentResolver(), Settings.Secure.ANDROID_ID);
                             FirebaseUtils.getFirestore().collection("users").document(androidId1).get().addOnSuccessListener((s) -> {
-                                FirebaseUtils.getFirestore().collection("users").document(androidId1)
-                                        .update("Last game reviewed on", LocalDateTime.now().format(DateTimeFormatter.ofPattern(" dd-MMM-yyyy 'at' hh:mm a", Locale.ENGLISH)), "Games reviewed till now", ((Long) s.get("Games reviewed till now")) + 1);
+                                FirebaseUtils.getFirestore().collection("users").document(androidId1).update("Last game reviewed on", LocalDateTime.now().format(DateTimeFormatter.ofPattern(" dd-MMM-yyyy 'at' hh:mm a", Locale.ENGLISH)), "Games reviewed till now", ((Long) s.get("Games reviewed till now")) + 1);
                             });
                             pref.edit().putBoolean("isReviewing", false).apply();
                             findViewById(R.id.urlInp).setEnabled(true);
