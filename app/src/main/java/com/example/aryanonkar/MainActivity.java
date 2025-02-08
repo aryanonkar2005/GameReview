@@ -6,6 +6,7 @@ import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.graphics.Rect;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -70,6 +71,8 @@ import java.util.regex.Pattern;
 public class MainActivity extends AppCompatActivity {
     AlertDialog grantInstallPermissionDialog;
     long version;
+
+    boolean pastedOnce = false;
     ClipboardManager clipboardManager;
     boolean blockedAccess = false;
     AlertDialog block_dialog;
@@ -82,31 +85,32 @@ public class MainActivity extends AppCompatActivity {
         super.onWindowFocusChanged(hasFocus);
         try {
             updatePasteBtn();
+            if(!pastedOnce) {
+                if (pref.getBoolean("autopaste", false)) {
+                    if (clipboardManager.hasPrimaryClip() && clipboardManager.getPrimaryClipDescription().hasMimeType("text/plain")) {
+                        ClipData clipData = clipboardManager.getPrimaryClip();
+                        if (clipData != null && clipData.getItemCount() > 0) {
+                            String clipboardText = clipData.getItemAt(0).getText().toString().trim();
+                            if (!clipboardText.isEmpty()) {
+                                pastedOnce = true;
+                                Pattern pattern = Pattern.compile("https://www\\.chess\\.com/[a-z0-9/]+\\S");
+                                Matcher matcher = pattern.matcher(clipboardText);
+                                String game_url = null;
+                                if (matcher.find()) game_url = matcher.group();
+                                if (game_url != null) {
+                                    ((TextInputEditText) findViewById(R.id.urlInp)).setText(clipboardText);
+                                    Toast.makeText(this, "Game URL pasted from clipboard", Toast.LENGTH_SHORT).show();
+                                }
+                            }else pastedOnce = true;
+                        }
+                    }
+                }
+            }
         } catch (Exception ignored) {
         }
     }
 
     public void updatePasteBtn() {
-        if (pref.getBoolean("autopaste", false)) {
-            if (clipboardManager.hasPrimaryClip() && clipboardManager.getPrimaryClipDescription().hasMimeType("text/plain")) {
-                ClipData clipData = clipboardManager.getPrimaryClip();
-                if (clipData != null && clipData.getItemCount() > 0) {
-                    String clipboardText = clipData.getItemAt(0).getText().toString().trim();
-                    if (!clipboardText.isEmpty()) {
-                        Pattern pattern = Pattern.compile("https://www\\.chess\\.com/[a-z0-9/]+\\S");
-                        Matcher matcher = pattern.matcher(clipboardText);
-                        String game_url = null;
-                        if (matcher.find()) game_url = matcher.group();
-                        if (game_url != null) {
-                            if(!game_url.equals(((TextInputEditText) findViewById(R.id.urlInp)).getText().toString().trim())) {
-                                ((TextInputEditText) findViewById(R.id.urlInp)).setText(clipboardText);
-                                Toast.makeText(this, "Game URL pasted from clipboard", Toast.LENGTH_SHORT).show();
-                            }
-                        }
-                    }
-                }
-            }
-        }
         if (clipboardManager.hasPrimaryClip() && clipboardManager.getPrimaryClipDescription().hasMimeType("text/plain")) {
             ClipData clipData = clipboardManager.getPrimaryClip();
             if (clipData != null && clipData.getItemCount() > 0) {
@@ -187,6 +191,10 @@ public class MainActivity extends AppCompatActivity {
             return insets;
         });
 
+        try {
+            version = getPackageManager().getPackageInfo(getPackageName(), 0).getLongVersionCode();
+        } catch (PackageManager.NameNotFoundException ignored) {}
+
         ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.POST_NOTIFICATIONS}, 100);
 
         pref = PreferenceManager.getDefaultSharedPreferences(this);
@@ -195,6 +203,9 @@ public class MainActivity extends AppCompatActivity {
 
         File apkFile = new File(getFilesDir(), "latest.apk");
         if (pref.getLong("version-code", 0) < version) {
+            FirebaseUtils.getFirestore().collection("users").document(Settings.Secure.getString(MainActivity.this.getContentResolver(), Settings.Secure.ANDROID_ID)).get().addOnSuccessListener(documentSnapshot -> {
+                documentSnapshot.getReference().update("Version", version);
+            });
             if (apkFile.exists()) apkFile.delete();
             pref.edit().putLong("version-code", version).apply();
         }
@@ -242,7 +253,7 @@ public class MainActivity extends AppCompatActivity {
             });
             clipboardManager = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
             updatePasteBtn();
-            ClipboardManager.OnPrimaryClipChangedListener clipboardListener = ()-> updatePasteBtn();
+            ClipboardManager.OnPrimaryClipChangedListener clipboardListener = () -> updatePasteBtn();
             clipboardManager.addPrimaryClipChangedListener(clipboardListener);
             findViewById(R.id.pasteBtn).setOnClickListener((e) -> {
                 if (clipboardManager.hasPrimaryClip() && clipboardManager.getPrimaryClipDescription().hasMimeType("text/plain")) {
@@ -419,7 +430,7 @@ public class MainActivity extends AppCompatActivity {
                                         capitalizedUname.append(Character.toUpperCase(word.charAt(0))).append(word.substring(1).toLowerCase()).append(" ");
                                     }
                                 }
-                                FirebaseUtils.getFirestore().collection("users").document(androidId).set(new HashMap<String, Object>(Map.of("Username", capitalizedUname.toString().trim(), "Blocked", false, "Device model", Build.MODEL, "Last game reviewed on", ": No game reviewed till now", "Games reviewed till now", 0)));
+                                FirebaseUtils.getFirestore().collection("users").document(androidId).set(new HashMap<String, Object>(Map.of("Username", capitalizedUname.toString().trim(), "Blocked", false, "Device model", Build.MODEL, "Last game reviewed on", ": No game reviewed till now", "Games reviewed till now", 0, "Version", version)));
                                 unameDialog.dismiss();
                             });
                         } else {

@@ -43,6 +43,10 @@ public class UpdateApp {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot snapshot) {
                     pref.edit().putString("update", LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MMM-yyyy 'at' hh:mm a", Locale.ENGLISH))).apply();
+                    if(snapshot.getValue(Integer.class) <= version) {
+                        apkFile.delete();
+                        return;
+                    }
                     File apkFile = new File(context.getFilesDir(), "latest.apk");
                     PackageManager pm = context.getPackageManager();
                     PackageInfo info = pm.getPackageArchiveInfo(apkFile.getAbsolutePath(), PackageManager.GET_META_DATA);
